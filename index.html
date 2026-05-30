@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Piano Health Report</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1e3a5f; --primary-mid: #2563eb; --primary-light: #3b82f6;
+      --bg: #f0f4f8; --card: #fff; --text: #1a202c; --muted: #64748b; --border: #e2e8f0;
+      --radius: 14px;
+      --A: #16a34a; --A-bg: #dcfce7; --A-border: #86efac;
+      --B: #65a30d; --B-bg: #ecfccb; --B-border: #bef264;
+      --C: #d97706; --C-bg: #fef3c7; --C-border: #fcd34d;
+      --D: #dc2626; --D-bg: #fee2e2; --D-border: #fca5a5;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 88px; }
+
+    .app-header { background: linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff; padding:14px 18px 10px; position:sticky; top:0; z-index:200; box-shadow:0 2px 12px rgba(30,58,95,.35); }
+    .header-top { display:flex; align-items:center; gap:10px; }
+    .header-icon { font-size:22px; line-height:1; }
+    .header-text h1 { font-size:17px; font-weight:800; letter-spacing:-.3px; }
+    .header-text p  { font-size:11px; opacity:.75; margin-top:1px; }
+    .progress-wrap { margin-top:10px; display:flex; gap:5px; align-items:center; }
+    .progress-seg { flex:1; height:3px; border-radius:2px; background:rgba(255,255,255,.25); transition:background .3s; }
+    .progress-seg.done   { background:rgba(255,255,255,.65); }
+    .progress-seg.active { background:#fff; }
+    .progress-label { font-size:11px; opacity:.8; white-space:nowrap; margin-left:4px; }
+
+    .main { max-width:580px; margin:0 auto; padding:18px 14px 4px; }
+    .step-header { margin-bottom:18px; }
+    .step-num   { font-size:11px; font-weight:700; color:var(--primary-light); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+    .step-title { font-size:22px; font-weight:800; color:var(--text); line-height:1.2; }
+    .step-desc  { font-size:14px; color:var(--muted); margin-top:4px; }
+
+    .card { background:var(--card); border-radius:var(--radius); padding:18px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,.07),0 0 0 1px rgba(0,0,0,.04); }
+    .card-title { font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--primary-mid); margin-bottom:14px; padding-bottom:10px; border-bottom:1.5px solid var(--border); }
+
+    .cb-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .cb-grid-1 { display:grid; grid-template-columns:1fr; gap:8px; }
+    .cb-item { display:flex; align-items:center; gap:9px; padding:10px 12px; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:background .12s,border-color .12s; -webkit-tap-highlight-color:transparent; }
+    .cb-item.checked { background:#eff6ff; border-color:var(--primary-light); }
+    .cb-item input[type=checkbox] { width:17px; height:17px; accent-color:var(--primary-mid); cursor:pointer; flex-shrink:0; }
+    .cb-item span { font-size:13px; color:var(--text); user-select:none; line-height:1.3; }
+
+    .findings-cat { margin-bottom:16px; }
+    .findings-cat:last-child { margin-bottom:0; }
+    .findings-cat-label { font-size:13px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+
+    .summary-preview {
+      background:#f8fafc; border:1.5px solid var(--border); border-radius:10px;
+      padding:14px 16px; font-size:14px; line-height:1.8; color:#334155;
+      white-space:pre-wrap; min-height:80px; transition:border-color .2s,background .2s;
+    }
+    .summary-preview.active { background:#eff6ff; border-color:#bfdbfe; }
+    .summary-hint { color:#94a3b8; font-size:13px; font-style:italic; }
+
+    .form-group { margin-bottom:13px; }
+    .form-group:last-child { margin-bottom:0; }
+    label.form-label { display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:5px; letter-spacing:.3px; }
+    .form-input, .form-textarea {
+      width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:10px;
+      font-size:15px; color:var(--text); background:#fff;
+      transition:border-color .15s,box-shadow .15s;
+      -webkit-appearance:none; appearance:none; font-family:inherit;
+    }
+    .form-input:focus, .form-textarea:focus { outline:none; border-color:var(--primary-light); box-shadow:0 0 0 3px rgba(59,130,246,.15); }
+    .form-textarea { min-height:78px; resize:vertical; line-height:1.5; }
+    .input-row   { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .input-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+
+    .assess-row { margin-bottom:14px; }
+    .assess-name { font-size:14px; font-weight:600; color:var(--text); margin-bottom:7px; }
+    .rating-row { display:flex; gap:7px; }
+    .rating-btn { flex:1; padding:10px 4px; border-radius:9px; border:2px solid var(--border); background:#fff; font-size:14px; font-weight:800; cursor:pointer; transition:all .12s; text-align:center; -webkit-tap-highlight-color:transparent; line-height:1.2; }
+    .rating-btn small { display:block; font-size:9px; font-weight:600; opacity:.7; margin-top:1px; }
+    .rating-btn:active { transform:scale(.95); }
+    .rating-btn.sel-A { background:var(--A-bg); border-color:var(--A-border); color:var(--A); }
+    .rating-btn.sel-B { background:var(--B-bg); border-color:var(--B-border); color:var(--B); }
+    .rating-btn.sel-C { background:var(--C-bg); border-color:var(--C-border); color:var(--C); }
+    .rating-btn.sel-D { background:var(--D-bg); border-color:var(--D-border); color:var(--D); }
+
+    .qual-row { display:flex; gap:7px; }
+    .qual-btn { flex:1; padding:9px 4px; border-radius:9px; border:1.5px solid var(--border); background:#fff; font-size:13px; font-weight:600; cursor:pointer; text-align:center; color:var(--muted); transition:all .12s; -webkit-tap-highlight-color:transparent; }
+    .qual-btn.sel { background:#eff6ff; border-color:var(--primary-light); color:var(--primary-mid); }
+
+    .status-card { border-radius:12px; padding:16px 18px; display:flex; align-items:center; gap:16px; }
+    .status-dot  { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:900; color:#fff; flex-shrink:0; }
+    .status-info h2 { font-size:20px; font-weight:800; line-height:1.2; }
+    .status-info p  { font-size:13px; opacity:.8; margin-top:3px; }
+    .s-excellent { background:#dcfce7; } .s-excellent .status-dot { background:#16a34a; } .s-excellent .status-info { color:#14532d; }
+    .s-good      { background:#ecfccb; } .s-good .status-dot      { background:#65a30d; } .s-good .status-info      { color:#365314; }
+    .s-fair      { background:#fef3c7; } .s-fair .status-dot      { background:#d97706; } .s-fair .status-info      { color:#78350f; }
+    .s-attention { background:#fee2e2; } .s-attention .status-dot { background:#dc2626; } .s-attention .status-info { color:#7f1d1d; }
+
+    .rec-list { display:flex; flex-direction:column; gap:9px; }
+    .rec-item { display:flex; align-items:center; gap:11px; padding:12px 14px; background:#f0f7ff; border-left:3px solid var(--primary-light); border-radius:0 10px 10px 0; font-size:14px; font-weight:500; color:var(--text); }
+    .no-recs { color:var(--muted); font-size:14px; text-align:center; padding:16px; }
+
+    .mini-table { width:100%; border-collapse:collapse; }
+    .mini-table td { padding:8px 0; border-bottom:1px solid var(--border); font-size:14px; }
+    .mini-table tr:last-child td { border-bottom:none; }
+    .mini-table .cat { color:var(--muted); width:55%; }
+    .rating-pill { display:inline-block; padding:2px 10px; border-radius:20px; font-size:13px; font-weight:800; }
+    .pill-A { background:var(--A-bg); color:var(--A); } .pill-B { background:var(--B-bg); color:var(--B); }
+    .pill-C { background:var(--C-bg); color:var(--C); } .pill-D { background:var(--D-bg); color:var(--D); }
+    .pill-none { background:var(--border); color:var(--muted); }
+
+    .nav-wrap  { position:fixed; bottom:0; left:0; right:0; background:rgba(255,255,255,.95); backdrop-filter:blur(10px); border-top:1px solid var(--border); z-index:200; }
+    .nav-inner { max-width:580px; margin:0 auto; padding:10px 14px 14px; display:flex; gap:10px; }
+    .btn { flex:1; padding:14px; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; transition:all .15s; -webkit-tap-highlight-color:transparent; font-family:inherit; }
+    .btn:active { transform:scale(.97); }
+    .btn-back { background:var(--border); color:var(--muted); flex:.6; }
+    .btn-next { background:var(--primary); color:#fff; }
+    .btn-pdf  { flex:1.4; background:linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; }
+
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1000; color:#fff; }
+    .overlay .spin { width:48px; height:48px; border:4px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; margin-bottom:16px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .overlay p { font-size:16px; font-weight:600; }
+
+    .divider { height:1px; background:var(--border); margin:14px 0; }
+
+    #pdf-template { position:fixed; left:-9999px; top:0; width:820px; background:#fff; font-family:'Helvetica Neue',Arial,sans-serif; }
+
+    @media (max-width:380px) { .cb-grid { grid-template-columns:1fr; } .input-row { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-top">
+    <div class="header-icon">🎹</div>
+    <div class="header-text">
+      <h1 id="h-title">Piano Health Report</h1>
+      <p id="h-sub">Professional Report Tool for Piano Technicians</p>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-seg" id="ps1"></div>
+    <div class="progress-seg" id="ps2"></div>
+    <div class="progress-seg" id="ps3"></div>
+    <div class="progress-seg" id="ps4"></div>
+    <div class="progress-seg" id="ps5"></div>
+    <span class="progress-label" id="progress-label">1 / 5</span>
+  </div>
+</header>
+
+<main class="main" id="main-content"></main>
+
+<div class="nav-wrap"><div class="nav-inner" id="nav-inner"></div></div>
+
+<div class="overlay" id="overlay" style="display:none">
+  <div class="spin"></div>
+  <p id="overlay-text">Generating PDF…</p>
+</div>
+
+<div id="pdf-template"></div>
+
+<script>
+// ── Language ──────────────────────────────────────────────────────
+const lang = (navigator.language || 'en').startsWith('ja') ? 'ja' : 'en';
+const isJa = lang === 'ja';
+
+// ── i18n ──────────────────────────────────────────────────────────
+const T = {
+  en: {
+    appTitle:'Piano Health Report', appSub:'Professional Report Tool for Piano Technicians',
+    step:'Step', of:'of',
+    s1Title:'Customer Goals', s1Desc:'Record what the customer wants to improve and preserve',
+    s1Card:'Customer Feedback',
+    s1Q1:'What would you like to improve?',
+    improveOpts:['Tone is too bright','Tone is too dull','Touch is too heavy','Touch is too light','Tuning does not hold','Pedal concerns'],
+    s1Q2:'What would you like to preserve?',
+    preserveOpts:['Current tone','Current touch','Current volume','Overall character'],
+    additionalComments:'Additional comments',
+    s2Title:'Piano Information', s2Desc:'Enter piano and customer details',
+    customerName:'Customer Name', manufacturer:'Manufacturer', model:'Model',
+    serialNumber:'Serial Number', year:'Year', inspectionDate:'Inspection Date',
+    s3Title:'Technician Assessment', s3Desc:'Rate each category',
+    ratingGuide:'A = Excellent · B = Good · C = Maintenance Needed · D = Repair Needed',
+    touch:'Touch', tone:'Tone', action:'Action', hammers:'Hammers', pedals:'Pedals', tuningStability:'Tuning Stability',
+    rA:'A', rAl:'Excellent', rB:'B', rBl:'Good', rC:'C', rCl:'Maint.', rD:'D', rDl:'Repair',
+    s4Title:'Measured Values', s4Desc:'Enter measurement data (all optional)',
+    humidity:'Humidity (%)', pitch:'Pitch (Hz)', downweight:'Downweight (g)',
+    keyDip:'Key Dip', letOff:'Let-off',
+    normal:'Normal', shallow:'Shallow', deep:'Deep', wide:'Wide', close:'Close',
+    s5Title:'Summary & Report', s5Desc:'Enter findings, review, and generate the PDF',
+    techFindings:'Technician Findings',
+    techFindingsDesc:'Check all that apply — summary is generated automatically',
+    techSummaryTitle:'Technician Summary',
+    techSummaryAuto:'Auto-generated from selections above',
+    noFindingsHint:'Select findings above to generate a summary…',
+    overallCondition:'Overall Condition', conditionAssessment:'Condition Assessment',
+    customerGoals:'Customer Goals', recommendations:'Recommended Services',
+    techNotes:'Technician Notes', notesPlaceholder:'Add supplementary notes (optional)…',
+    noRecs:'No specific recommendations — piano is in good condition.',
+    excellent:'Excellent', good:'Good', fair:'Fair', attention:'Needs Attention',
+    back:'Back', next:'Next →', generatePDF:'Generate PDF', pdfIcon:'📄',
+    improveSummaryLabel:'To Improve', preserveSummaryLabel:'To Preserve',
+    rec:{
+      voicing:'Voicing', hammerShaping:'Hammer Shaping', hammerReplacement:'Hammer Replacement Evaluation',
+      toneImprovement:'Tone Improvement Service', pitchStabilization:'Pitch Stabilization',
+      pinInspection:'Tuning Pin Inspection', actionRegulation:'Action Regulation', pedalService:'Pedal Service',
+    },
+    pdfHeaderSub:'Piano Health Report',
+    pdfSectionOverall:'OVERALL CONDITION',
+    pdfSectionGoals:'CUSTOMER GOALS',
+    pdfSectionTechSummary:'TECHNICIAN SUMMARY',
+    pdfSectionAssess:'CONDITION ASSESSMENT',
+    pdfSectionMeasure:'MEASURED VALUES',
+    pdfSectionRec:'RECOMMENDED SERVICES',
+    pdfSectionNotes:'TECHNICIAN NOTES',
+    pdfKeyFocus:'KEY FOCUS', pdfNextStep:'RECOMMENDED NEXT STEP',
+    pdfImprove:'Things to Improve', pdfPreserve:'Things to Preserve',
+    pdfReason:'Reason', pdfBenefits:'Expected Benefits',
+    pdfNotSpecified:'Not specified', pdfNone:'—',
+    pdfFooter:"This report was prepared to help communicate the piano's current condition and service recommendations.",
+    generatingPDF:'Generating PDF…',
+    ctxExcellent:'The piano is in outstanding condition. Continued regular maintenance will help sustain this level.',
+    ctxGood:'The piano is in good overall condition. Some age-related changes are noted, but playability is solid.',
+    ctxFair:'Several areas would benefit from service. Addressing these now will maintain long-term playability.',
+    ctxAttention:'Some areas require prompt attention. Delayed service may lead to further deterioration.',
+    humLow:'Low', humNormal:'Normal', humHigh:'High',
+    humLowNote:'Risk of wood shrinkage', humNormalNote:'Optimal humidity range', humHighNote:'Risk of swelling',
+    pitchLow:'Low', pitchNormal:'Normal', pitchHigh:'High',
+    pitchLowNote:'Below A440', pitchNormalNote:'Near standard pitch', pitchHighNote:'Above A440',
+    dwLight:'Light', dwNormal:'Normal', dwHeavy:'Heavy',
+    dwLightNote:'Below average', dwNormalNote:'Within standard range', dwHeavyNote:'Above average',
+    nextStepMaintain:'Continue regular maintenance',
+  },
+  ja: {
+    appTitle:'ピアノ健康診断レポート', appSub:'ピアノ技術者向け診断レポート作成ツール',
+    step:'ステップ', of:'/',
+    s1Title:'お客様のご要望', s1Desc:'お客様が改善・維持したい点を記録します',
+    s1Card:'お客様フィードバック',
+    s1Q1:'改善したい点は何ですか？',
+    improveOpts:['音が明るすぎる','音が暗すぎる','タッチが重すぎる','タッチが軽すぎる','調律が安定しない','ペダルの問題'],
+    s1Q2:'維持したい点は何ですか？',
+    preserveOpts:['現在の音色','現在のタッチ','現在の音量','全体的な特性'],
+    additionalComments:'追加コメント',
+    s2Title:'ピアノ情報', s2Desc:'ピアノとお客様の詳細を入力します',
+    customerName:'お客様名', manufacturer:'メーカー', model:'モデル',
+    serialNumber:'シリアル番号', year:'製造年', inspectionDate:'診断日',
+    s3Title:'技術評価', s3Desc:'各項目を評価します',
+    ratingGuide:'A=優良 · B=良好 · C=要メンテナンス · D=要修理',
+    touch:'タッチ', tone:'音色', action:'アクション', hammers:'ハンマー', pedals:'ペダル', tuningStability:'調律安定性',
+    rA:'A', rAl:'優良', rB:'B', rBl:'良好', rC:'C', rCl:'要整備', rD:'D', rDl:'要修理',
+    s4Title:'計測値', s4Desc:'計測データを入力します（すべて任意）',
+    humidity:'湿度 (%)', pitch:'ピッチ (Hz)', downweight:'ダウンウェイト (g)',
+    keyDip:'鍵盤深さ', letOff:'レットオフ',
+    normal:'標準', shallow:'浅い', deep:'深い', wide:'広い', close:'狭い',
+    s5Title:'まとめ・レポート作成', s5Desc:'所見を入力して確認後、PDFを作成します',
+    techFindings:'技術者所見',
+    techFindingsDesc:'該当するものをすべて選択してください — 総評が自動生成されます',
+    techSummaryTitle:'技術者総評',
+    techSummaryAuto:'上記の選択から自動生成',
+    noFindingsHint:'上記の所見を選択すると総評が自動生成されます…',
+    overallCondition:'総合評価', conditionAssessment:'各部状態評価',
+    customerGoals:'お客様のご要望', recommendations:'推奨サービス',
+    techNotes:'技術者メモ', notesPlaceholder:'補足メモを追加（任意）…',
+    noRecs:'特に推奨事項なし — ピアノは良好な状態です。',
+    excellent:'優良', good:'良好', fair:'要注意', attention:'要対応',
+    back:'戻る', next:'次へ →', generatePDF:'PDFを作成', pdfIcon:'📄',
+    improveSummaryLabel:'改善希望', preserveSummaryLabel:'維持希望',
+    rec:{
+      voicing:'整音（ボイシング）', hammerShaping:'ハンマー整形', hammerReplacement:'ハンマー交換検討',
+      toneImprovement:'音色改善サービス', pitchStabilization:'ピッチ安定化',
+      pinInspection:'チューニングピン点検', actionRegulation:'アクション調整', pedalService:'ペダル整備',
+    },
+    pdfHeaderSub:'ピアノ健康診断レポート',
+    pdfSectionOverall:'総合評価',
+    pdfSectionGoals:'お客様のご要望',
+    pdfSectionTechSummary:'技術者総評',
+    pdfSectionAssess:'各部状態評価',
+    pdfSectionMeasure:'計測値',
+    pdfSectionRec:'推奨サービス',
+    pdfSectionNotes:'技術者メモ',
+    pdfKeyFocus:'特に注目すべき点', pdfNextStep:'推奨される次の一手',
+    pdfImprove:'改善したいこと', pdfPreserve:'維持したいこと',
+    pdfReason:'推奨理由', pdfBenefits:'期待できる改善',
+    pdfNotSpecified:'未入力', pdfNone:'—',
+    pdfFooter:'このレポートはお客様へのピアノ状態の説明とサービス提案を目的として作成されました。',
+    generatingPDF:'PDF作成中…',
+    ctxExcellent:'ピアノは非常に良好な状態です。定期的なメンテナンスを続けることで、この状態を長く維持できます。',
+    ctxGood:'全体的に良好な状態です。一部に経年変化が見られますが、演奏上の大きな問題はありません。',
+    ctxFair:'いくつかの項目でメンテナンスをお勧めします。早めに対応することで、良好な演奏状態を維持できます。',
+    ctxAttention:'緊急の対応が必要な項目があります。放置するとさらなる悪化につながる可能性があります。',
+    humLow:'低め', humNormal:'適正', humHigh:'高め',
+    humLowNote:'乾燥注意', humNormalNote:'適正範囲内', humHighNote:'湿気・膨張注意',
+    pitchLow:'低め', pitchNormal:'適正', pitchHigh:'高め',
+    pitchLowNote:'A440より低い', pitchNormalNote:'標準ピッチ付近', pitchHighNote:'A440より高い',
+    dwLight:'軽め', dwNormal:'適正', dwHeavy:'重め',
+    dwLightNote:'平均より軽い', dwNormalNote:'標準範囲内', dwHeavyNote:'平均より重い',
+    nextStepMaintain:'定期メンテナンスの継続',
+  }
+};
+const t  = k => T[lang][k] !== undefined ? T[lang][k] : (T.en[k] !== undefined ? T.en[k] : k);
+const tr = k => (t('rec') || {})[k] || k;
+
+// ── Findings data ─────────────────────────────────────────────────
+const FINDINGS_DATA = [
+  { cat:'tone',   icon:'🎵', en:'Tone',             ja:'音色',
+    items:[
+      { key:'bright',  en:'Too bright',      ja:'明るすぎる',         enE:'too bright a tone',       jaE:'明るすぎる音色' },
+      { key:'harsh',   en:'Harsh',           ja:'硬い',               enE:'harshness',               jaE:'硬さ' },
+      { key:'uneven',  en:'Uneven',          ja:'ばらつきがある',      enE:'unevenness',              jaE:'ばらつき' },
+      { key:'nosust',  en:'Lacking sustain', ja:'伸びが不足している',  enE:'lack of sustain',         jaE:'伸びの不足' },
+    ]},
+  { cat:'touch',  icon:'✋', en:'Touch',            ja:'タッチ',
+    items:[
+      { key:'heavy',  en:'Heavy',               ja:'重い',               enE:'heaviness',               jaE:'重さ' },
+      { key:'light',  en:'Light',               ja:'軽い',               enE:'lightness',               jaE:'軽さ' },
+      { key:'uneven', en:'Uneven',              ja:'ばらつきがある',      enE:'unevenness',              jaE:'ばらつき' },
+      { key:'hard',   en:'Difficult to control',ja:'コントロールしにくい',enE:'difficulty in control',   jaE:'コントロールのしにくさ' },
+    ]},
+  { cat:'tuning', icon:'🎼', en:'Tuning Stability', ja:'調律安定性',
+    items:[
+      { key:'drops',   en:'Pitch drops easily',    ja:'ピッチが下がりやすい',   enE:'pitch dropping easily',      jaE:'ピッチが下がりやすい傾向' },
+      { key:'unstable',en:'Does not hold tuning',  ja:'調律が安定しにくい',     enE:'difficulty holding tuning',  jaE:'調律が安定しにくい傾向' },
+      { key:'seasonal',en:'Seasonal change likely', ja:'季節変動の影響が大きい', enE:'sensitivity to seasonal change',jaE:'季節変動の影響が大きい傾向' },
+    ]},
+  { cat:'pedals', icon:'🦶', en:'Pedals',           ja:'ペダル',
+    items:[
+      { key:'noise',  en:'Noise',               ja:'雑音がある',  enE:'noise',                  jaE:'雑音' },
+      { key:'weak',   en:'Ineffective response', ja:'効きが悪い',  enE:'ineffective response',   jaE:'効きの悪さ' },
+      { key:'adjust', en:'Adjustment needed',   ja:'調整が必要',  enE:'a need for adjustment',  jaE:'調整の必要性' },
+    ]},
+  { cat:'overall',icon:'📋', en:'Overall',          ja:'全体所見', single:true,
+    items:[
+      { key:'playable',    en:'Playable condition',               ja:'演奏可能な状態' },
+      { key:'maintenance', en:'Maintenance recommended',          ja:'メンテナンス推奨' },
+      { key:'followup',    en:'Follow-up inspection recommended', ja:'経過観察推奨' },
+      { key:'repair',      en:'Repair consultation recommended',  ja:'修理相談推奨' },
+    ]},
+];
+const FD = {};
+FINDINGS_DATA.forEach(c => { FD[c.cat] = c; });
+
+// ── State ─────────────────────────────────────────────────────────
+const CATS = ['touch','tone','action','hammers','pedals','tuningStability'];
+const defaultFindings = () => ({
+  tone:    Array(4).fill(false),
+  touch:   Array(4).fill(false),
+  tuning:  Array(3).fill(false),
+  pedals:  Array(3).fill(false),
+  overall: Array(4).fill(false),
+});
+const defaultState = () => ({
+  step:1,
+  improve:Array(6).fill(false), improveComment:'',
+  preserve:Array(4).fill(false), preserveComment:'',
+  customerName:'', manufacturer:'', model:'', serialNumber:'', year:'',
+  inspectionDate:new Date().toISOString().split('T')[0],
+  touch:'', tone:'', action:'', hammers:'', pedals:'', tuningStability:'',
+  humidity:'', pitch:'', downweight:'', keyDip:'', letOff:'',
+  findings: defaultFindings(),
+  techNotes:'',
+});
+
+let S = defaultState();
+try {
+  const saved = localStorage.getItem('pianoHealthReport');
+  if (saved) {
+    const p = JSON.parse(saved);
+    S = { ...S, ...p, step:1 };
+    if (!S.findings) S.findings = defaultFindings();
+    FINDINGS_DATA.forEach(c => {
+      if (!S.findings[c.cat]) S.findings[c.cat] = Array(c.items.length).fill(false);
+    });
+  }
+} catch(e) {}
+
+function save() {
+  try { localStorage.setItem('pianoHealthReport', JSON.stringify(S)); } catch(e) {}
+}
+
+// ── Logic helpers ─────────────────────────────────────────────────
+const cd = r => r === 'C' || r === 'D';
+
+function getOverallStatus() {
+  const rated = CATS.map(c => S[c]).filter(Boolean);
+  if (!rated.length) return null;
+  if (rated.includes('D')) return 'attention';
+  if (rated.includes('C')) return 'fair';
+  if (rated.includes('B')) return 'good';
+  return 'excellent';
+}
+function statusClass(s) { return {excellent:'s-excellent',good:'s-good',fair:'s-fair',attention:'s-attention'}[s]||'s-good'; }
+function statusLabel(s) { return {excellent:t('excellent'),good:t('good'),fair:t('fair'),attention:t('attention')}[s]||'—'; }
+function statusEmoji(s) { return {excellent:'✦',good:'✓',fair:'!',attention:'!'}[s]||'?'; }
+function getOverallContextText(s) { return {excellent:t('ctxExcellent'),good:t('ctxGood'),fair:t('ctxFair'),attention:t('ctxAttention')}[s]||''; }
+function getKeyFocusPoints(s) {
+  if (!s||s==='excellent') return [];
+  const d=CATS.filter(c=>S[c]==='D').map(c=>t(c)), f=CATS.filter(c=>S[c]==='C').map(c=>t(c)), pts=[];
+  if (d.length) pts.push(isJa?`${d.join('・')}は緊急対応が必要です`:`${d.join(', ')} requires immediate attention`);
+  if (f.length) pts.push(isJa?`${f.join('・')}に改善の余地があります`:`${f.join(', ')} has room for improvement`);
+  return pts;
+}
+function getNextStepText(recs) {
+  if (!recs||!recs.length) return t('nextStepMaintain');
+  return tr(recs[0].key);
+}
+function getRecommendations() {
+  const recs=[], seen=new Set();
+  const add=(icon,key)=>{if(!seen.has(key)){seen.add(key);recs.push({icon,key});}};
+  if(cd(S.hammers)){add('🔨','voicing');add('🎯','hammerShaping');if(S.hammers==='D')add('🔧','hammerReplacement');}
+  if(cd(S.tone)&&!cd(S.hammers)) add('🎵','toneImprovement');
+  if(cd(S.tuningStability)){add('🎼','pitchStabilization');add('🔩','pinInspection');}
+  if(cd(S.touch)||cd(S.action)) add('⚙️','actionRegulation');
+  if(cd(S.pedals)) add('🦶','pedalService');
+  return recs;
+}
+function buildRecDetail(key) {
+  const reasons=[], benefits=[], ci=i=>S.improve[i];
+  switch(key) {
+    case 'voicing':
+      if(S.hammers&&cd(S.hammers)) reasons.push(isJa?`ハンマーの状態評価が${S.hammers}です。`:`Hammer condition was rated ${S.hammers}.`);
+      if(S.tone&&cd(S.tone)&&!cd(S.hammers)) reasons.push(isJa?`音色評価が${S.tone}です。`:`Tone was rated ${S.tone}.`);
+      if(ci(0)) reasons.push(isJa?'「音が明るすぎる」というご要望があります。':'Customer reported the tone is too bright.');
+      if(ci(1)) reasons.push(isJa?'「音が暗すぎる」というご要望があります。':'Customer reported the tone is too dull.');
+      benefits.push(isJa?'より柔らかく均一な音色に近づきます。':'A more even and mellow tone quality.',isJa?'強弱表現がしやすくなります。':'Improved dynamic control and expressiveness.');break;
+    case 'hammerShaping':
+      if(S.hammers) reasons.push(isJa?`ハンマー表面の摩耗が評価${S.hammers}です。`:`Hammer surface wear was rated ${S.hammers}.`);
+      benefits.push(isJa?'クリアで芯のある音色になります。':'Cleaner, more focused tone.',isJa?'音域全体の均一性が向上します。':'More consistent tone across registers.');break;
+    case 'hammerReplacement':
+      reasons.push(isJa?'ハンマーの摩耗がDレベルに達しており、交換の検討が必要です。':'Hammer wear has reached level D — replacement evaluation is recommended.');
+      benefits.push(isJa?'根本的な音色の改善が期待できます。':'Fundamental improvement in tone quality.',isJa?'長期にわたり安定した演奏が可能になります。':'Reliable long-term performance.');break;
+    case 'toneImprovement':
+      if(S.tone) reasons.push(isJa?`音色評価が${S.tone}です。`:`Tone was rated ${S.tone}.`);
+      if(ci(0)) reasons.push(isJa?'「音が明るすぎる」というご要望があります。':'Customer reported the tone is too bright.');
+      if(ci(1)) reasons.push(isJa?'「音が暗すぎる」というご要望があります。':'Customer reported the tone is too dull.');
+      benefits.push(isJa?'音色バランスが改善します。':'Improved tonal balance.',isJa?'弾き心地と表現力が向上します。':'Enhanced playability and expressiveness.');break;
+    case 'pitchStabilization':
+      if(S.tuningStability) reasons.push(isJa?`調律安定性の評価が${S.tuningStability}です。`:`Tuning stability was rated ${S.tuningStability}.`);
+      if(ci(4)) reasons.push(isJa?'「調律が安定しない」というご要望があります。':'Customer reported that tuning does not hold.');
+      benefits.push(isJa?'調律が長持ちするようになります。':'Tuning holds longer between services.',isJa?'全音域にわたり安定したピッチが保たれます。':'Consistent pitch across all registers.');break;
+    case 'pinInspection':
+      if(S.tuningStability) reasons.push(isJa?`調律安定性評価${S.tuningStability}により、チューニングピンの点検が必要です。`:`Tuning stability rated ${S.tuningStability} warrants tuning pin inspection.`);
+      benefits.push(isJa?'調律不安定の根本原因を特定します。':'Identifies the root cause of tuning instability.',isJa?'長期的な調律信頼性を確保します。':'Ensures long-term tuning reliability.');break;
+    case 'actionRegulation':
+      {const parts=[];
+      if(S.touch&&cd(S.touch)) parts.push(isJa?`タッチ評価${S.touch}`:`Touch rated ${S.touch}`);
+      if(S.action&&cd(S.action)) parts.push(isJa?`アクション評価${S.action}`:`Action rated ${S.action}`);
+      if(parts.length) reasons.push(parts.join(isJa?'・':', ')+(isJa?'により調整が必要です。':' indicates regulation is needed.'));
+      if(ci(2)) reasons.push(isJa?'「タッチが重すぎる」というご要望があります。':'Customer reported touch is too heavy.');
+      if(ci(3)) reasons.push(isJa?'「タッチが軽すぎる」というご要望があります。':'Customer reported touch is too light.');}
+      benefits.push(isJa?'鍵盤の均一性と応答性が改善します。':'More even and responsive key action.',isJa?'ダイナミクスコントロールが向上します。':'Improved dynamic control.');break;
+    case 'pedalService':
+      if(S.pedals) reasons.push(isJa?`ペダルの状態評価が${S.pedals}です。`:`Pedal condition was rated ${S.pedals}.`);
+      if(ci(5)) reasons.push(isJa?'ペダルに関するご要望があります。':'Customer reported pedal concerns.');
+      benefits.push(isJa?'スムーズで安定したペダル操作が可能になります。':'Smooth, reliable pedal operation.',isJa?'サスティンとソフトペダルの機能が改善します。':'Restored sustain and soft pedal function.');break;
+  }
+  return {reasons,benefits};
+}
+function getMeasurementStatus(field,value) {
+  const v=parseFloat(value); if(isNaN(v)||value==='') return null;
+  if(field==='humidity'){if(v<40)return{label:t('humLow'),note:t('humLowNote'),color:'#d97706'};if(v<=60)return{label:t('humNormal'),note:t('humNormalNote'),color:'#16a34a'};return{label:t('humHigh'),note:t('humHighNote'),color:'#dc2626'};}
+  if(field==='pitch'){if(v<438)return{label:t('pitchLow'),note:t('pitchLowNote'),color:'#d97706'};if(v<=442)return{label:t('pitchNormal'),note:t('pitchNormalNote'),color:'#16a34a'};return{label:t('pitchHigh'),note:t('pitchHighNote'),color:'#d97706'};}
+  if(field==='downweight'){if(v<45)return{label:t('dwLight'),note:t('dwLightNote'),color:'#3b82f6'};if(v<=56)return{label:t('dwNormal'),note:t('dwNormalNote'),color:'#16a34a'};return{label:t('dwHeavy'),note:t('dwHeavyNote'),color:'#d97706'};}
+  return null;
+}
+
+// ── Summary generation ────────────────────────────────────────────
+function joinEmbeds(items) {
+  if (!items.length) return '';
+  const emb = items.map(i => isJa ? (i.jaE||i.ja) : (i.enE||i.en));
+  if (emb.length===1) return emb[0];
+  if (emb.length===2) return emb.join(isJa?'と':' and ');
+  return emb.slice(0,-1).join(isJa?'・':', ')+(isJa?'および':', and ')+emb[emb.length-1];
+}
+
+function getSel(cat) {
+  const bools = S.findings[cat]||[];
+  return FD[cat].items.filter((_,i)=>bools[i]);
+}
+
+function generateTechnicianSummary() {
+  const tone=getSel('tone'), touch=getSel('touch'), tun=getSel('tuning'),
+        ped=getSel('pedals'), ov=getSel('overall');
+  const ovKeys=ov.map(i=>i.key);
+  const any=arr=>arr.length>0;
+  const anyIssue=any(tone)||any(touch)||any(tun)||any(ped);
+  if(!any(ov)&&!anyIssue) return '';
+
+  const isPlayable=ovKeys.includes('playable'), isMaint=ovKeys.includes('maintenance'),
+        isFollow=ovKeys.includes('followup'),   isRepair=ovKeys.includes('repair');
+
+  const areas=[];
+  if(any(tone))  areas.push(isJa?'音色':'tone quality');
+  if(any(touch)) areas.push(isJa?'タッチ':'touch');
+  if(any(tun))   areas.push(isJa?'調律安定性':'tuning stability');
+  if(any(ped))   areas.push(isJa?'ペダル':'pedal function');
+
+  const areaStr = areas.length===0?'':areas.length===1?areas[0]
+    :areas.slice(0,-1).join(isJa?'・':', ')+(isJa?'と':' and ')+areas[areas.length-1];
+
+  const paras=[];
+
+  // P1: Opening
+  let open;
+  if(isRepair)      open=isJa?'このピアノは修理のご相談をお勧めします。':'This piano requires repair consultation.';
+  else if(isFollow) open=isJa?'このピアノの状態は経過観察が推奨されます。':'This piano requires follow-up inspection to monitor its condition.';
+  else if(isMaint)  open=isJa?'このピアノは演奏可能な状態ですが、メンテナンスをお勧めします。':'This piano is in playable condition, but maintenance is recommended.';
+  else if(isPlayable)open=isJa?'このピアノは演奏可能な状態です。':'This piano is in playable condition.';
+  else               open=isJa?'今回の診断で以下の所見が確認されました。':'The following findings were noted during the inspection.';
+  if(areaStr) open+=(isJa?`${areaStr}に改善の余地があります。`:` There is room for improvement in ${areaStr}.`);
+  paras.push(open);
+
+  // P2: Tone
+  if(any(tone)){
+    const j=joinEmbeds(tone);
+    paras.push(isJa
+      ?`音色には${j}が見られます。整音やハンマー整形により、より均一で落ち着いた音色が期待できます。`
+      :`The tone shows ${j}. Voicing and hammer shaping may help create a more even and mellow sound.`);
+  }
+  // P3: Touch
+  if(any(touch)){
+    const j=joinEmbeds(touch);
+    paras.push((isJa?'また、':'')+(isJa
+      ?`タッチには${j}が感じられます。アクション調整により、より均一で弾きやすいタッチが期待できます。`
+      :`The touch shows ${j}. Action regulation may help create a more even and responsive feel.`));
+  }
+  // P4: Tuning
+  if(any(tun)){
+    const j=joinEmbeds(tun);
+    paras.push((isJa&&(any(tone)||any(touch))?'また、':'')+(isJa
+      ?`調律面では${j}が見られます。継続してこの傾向が確認される場合は、チューニングピンや弦周りの詳細点検をお勧めします。`
+      :`The piano shows ${j}. If this continues, a detailed inspection of the tuning pins and strings is recommended.`));
+  }
+  // P5: Pedals
+  if(any(ped)){
+    const j=joinEmbeds(ped);
+    paras.push((isJa&&anyIssue?'また、':'')+(isJa
+      ?`ペダルには${j}が確認されました。ペダル整備をお勧めします。`
+      :`The pedals show ${j}. Pedal service is recommended.`));
+  }
+  // Closing
+  if(anyIssue||isMaint||isRepair){
+    paras.push(isJa
+      ?'定期的なメンテナンスにより、より快適な演奏状態を保つことができます。'
+      :'Regular maintenance will help keep the piano in a more comfortable playing condition.');
+  }
+  return paras.join('\n\n');
+}
+
+// ── Render ────────────────────────────────────────────────────────
+function render() {
+  document.getElementById('h-title').textContent=t('appTitle');
+  document.getElementById('h-sub').textContent=t('appSub');
+  for(let i=1;i<=5;i++){
+    const el=document.getElementById('ps'+i);
+    el.className='progress-seg'+(i<S.step?' done':i===S.step?' active':'');
+  }
+  document.getElementById('progress-label').textContent=`${t('step')} ${S.step} ${t('of')} 5`;
+  const fns=[null,renderStep1,renderStep2,renderStep3,renderStep4,renderStep5];
+  document.getElementById('main-content').innerHTML=fns[S.step]();
+  attachListeners();
+  renderNav();
+  save();
+}
+
+function renderStep1() {
+  const io=t('improveOpts'),po=t('preserveOpts');
+  return `<div class="step-header"><div class="step-num">${t('step')} 1</div><div class="step-title">${t('s1Title')}</div><div class="step-desc">${t('s1Desc')}</div></div>
+  <div class="card"><div class="card-title">${t('s1Card')}</div>
+    <div class="card-question" style="font-size:14px;font-weight:600;margin-bottom:10px">${t('s1Q1')}</div>
+    <div class="cb-grid">${io.map((o,i)=>`<label class="cb-item${S.improve[i]?' checked':''}" onclick="toggleImprove(${i});return false"><input type="checkbox" ${S.improve[i]?'checked':''}><span>${o}</span></label>`).join('')}</div>
+    <div style="margin-top:12px"><label class="form-label">${t('additionalComments')}</label>
+    <textarea class="form-textarea" id="improveComment" placeholder="…">${esc(S.improveComment)}</textarea></div>
+  </div>
+  <div class="card">
+    <div class="card-question" style="font-size:14px;font-weight:600;margin-bottom:10px">${t('s1Q2')}</div>
+    <div class="cb-grid">${po.map((o,i)=>`<label class="cb-item${S.preserve[i]?' checked':''}" onclick="togglePreserve(${i});return false"><input type="checkbox" ${S.preserve[i]?'checked':''}><span>${o}</span></label>`).join('')}</div>
+    <div style="margin-top:12px"><label class="form-label">${t('additionalComments')}</label>
+    <textarea class="form-textarea" id="preserveComment" placeholder="…">${esc(S.preserveComment)}</textarea></div>
+  </div>`;
+}
+
+function renderStep2() {
+  return `<div class="step-header"><div class="step-num">${t('step')} 2</div><div class="step-title">${t('s2Title')}</div><div class="step-desc">${t('s2Desc')}</div></div>
+  <div class="card"><div class="card-title">${t('s2Title')}</div>
+    <div class="form-group"><label class="form-label">${t('customerName')}</label><input class="form-input" id="f-customerName" value="${esc(S.customerName)}" placeholder="—"></div>
+    <div class="divider"></div>
+    <div class="input-row">
+      <div class="form-group"><label class="form-label">${t('manufacturer')}</label><input class="form-input" id="f-manufacturer" value="${esc(S.manufacturer)}" placeholder="Yamaha"></div>
+      <div class="form-group"><label class="form-label">${t('model')}</label><input class="form-input" id="f-model" value="${esc(S.model)}" placeholder="U1"></div>
+    </div>
+    <div class="input-row">
+      <div class="form-group"><label class="form-label">${t('serialNumber')}</label><input class="form-input" id="f-serialNumber" value="${esc(S.serialNumber)}" placeholder="123456"></div>
+      <div class="form-group"><label class="form-label">${t('year')}</label><input class="form-input" id="f-year" inputmode="numeric" value="${esc(S.year)}" placeholder="1985"></div>
+    </div>
+    <div class="form-group"><label class="form-label">${t('inspectionDate')}</label><input class="form-input" id="f-inspectionDate" type="date" value="${esc(S.inspectionDate)}"></div>
+  </div>`;
+}
+
+function renderStep3() {
+  const cats=[['touch',t('touch')],['tone',t('tone')],['action',t('action')],['hammers',t('hammers')],['pedals',t('pedals')],['tuningStability',t('tuningStability')]];
+  return `<div class="step-header"><div class="step-num">${t('step')} 3</div><div class="step-title">${t('s3Title')}</div><div class="step-desc">${t('ratingGuide')}</div></div>
+  <div class="card"><div class="card-title">${t('s3Title')}</div>
+  ${cats.map(([key,label],i)=>`${i>0?'<div class="divider"></div>':''}
+    <div class="assess-row"><div class="assess-name">${label}</div>
+    <div class="rating-row">${['A','B','C','D'].map(r=>`<button class="rating-btn${S[key]===r?' sel-'+r:''}" onclick="setRating('${key}','${r}')">${t('r'+r)}<small>${t('r'+r+'l')}</small></button>`).join('')}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderStep4() {
+  const qb=(id,val,lbl)=>`<button class="qual-btn${S[id]===val?' sel':''}" onclick="setQual('${id}','${val}')">${lbl}</button>`;
+  return `<div class="step-header"><div class="step-num">${t('step')} 4</div><div class="step-title">${t('s4Title')}</div><div class="step-desc">${t('s4Desc')}</div></div>
+  <div class="card"><div class="card-title">${t('s4Title')}</div>
+    <div class="input-row-3">
+      <div class="form-group"><label class="form-label">${t('humidity')}</label><input class="form-input" id="f-humidity" inputmode="numeric" value="${esc(S.humidity)}" placeholder="45"></div>
+      <div class="form-group"><label class="form-label">${t('pitch')}</label><input class="form-input" id="f-pitch" inputmode="numeric" value="${esc(S.pitch)}" placeholder="440"></div>
+      <div class="form-group"><label class="form-label">${t('downweight')}</label><input class="form-input" id="f-downweight" inputmode="numeric" value="${esc(S.downweight)}" placeholder="50"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="form-group"><label class="form-label">${t('keyDip')}</label>
+      <div class="qual-row">${qb('keyDip','normal',t('normal'))}${qb('keyDip','shallow',t('shallow'))}${qb('keyDip','deep',t('deep'))}</div></div>
+    <div class="form-group" style="margin-top:12px"><label class="form-label">${t('letOff')}</label>
+      <div class="qual-row">${qb('letOff','normal',t('normal'))}${qb('letOff','wide',t('wide'))}${qb('letOff','close',t('close'))}</div></div>
+  </div>`;
+}
+
+function renderStep5() {
+  const status=getOverallStatus(), recs=getRecommendations();
+  const sc=status?statusClass(status):'s-good';
+  const cats=[['touch',t('touch')],['tone',t('tone')],['action',t('action')],['hammers',t('hammers')],['pedals',t('pedals')],['tuningStability',t('tuningStability')]];
+  const io=t('improveOpts'),po=t('preserveOpts');
+  const impSel=io.filter((_,i)=>S.improve[i]),presSel=po.filter((_,i)=>S.preserve[i]);
+  const summary=generateTechnicianSummary();
+
+  // Findings card
+  const findingsHTML=FINDINGS_DATA.map((catObj,ci)=>`
+    <div class="findings-cat${ci<FINDINGS_DATA.length-1?'':''}" style="${ci>0?'padding-top:14px;margin-top:14px;border-top:1px solid var(--border)':''}">
+      <div class="findings-cat-label">${catObj.icon} ${isJa?catObj.ja:catObj.en}</div>
+      <div class="${catObj.single?'cb-grid-1':'cb-grid'}">
+        ${catObj.items.map((item,idx)=>{const sel=(S.findings[catObj.cat]||[])[idx];return`<label class="cb-item${sel?' checked':''}" data-finding="${catObj.cat}-${idx}" onclick="toggleFinding('${catObj.cat}',${idx});return false"><input type="checkbox" ${sel?'checked':''}><span>${isJa?item.ja:item.en}</span></label>`}).join('')}
+      </div>
+    </div>`).join('');
+
+  return `<div class="step-header"><div class="step-num">${t('step')} 5</div><div class="step-title">${t('s5Title')}</div><div class="step-desc">${t('s5Desc')}</div></div>
+
+  <!-- Findings -->
+  <div class="card">
+    <div class="card-title">${t('techFindings')}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;margin-top:-8px">${t('techFindingsDesc')}</div>
+    ${findingsHTML}
+  </div>
+
+  <!-- Auto summary preview -->
+  <div class="card">
+    <div class="card-title">${t('techSummaryTitle')}</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;margin-top:-8px;display:flex;align-items:center;gap:5px">
+      <span style="background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">AUTO</span>
+      ${t('techSummaryAuto')}
+    </div>
+    <div class="summary-preview${summary?' active':''}" id="summary-preview">${summary?esc(summary).replace(/\n\n/g,'<br><br>'):`<span class="summary-hint">${t('noFindingsHint')}</span>`}</div>
+  </div>
+
+  <!-- Overall condition -->
+  ${status?`<div class="card"><div class="card-title">${t('overallCondition')}</div>
+    <div class="status-card ${sc}"><div class="status-dot">${statusEmoji(status)}</div>
+    <div class="status-info"><h2>${statusLabel(status)}</h2><p>${getOverallContextText(status)}</p></div></div>
+  </div>`:''}
+
+  <!-- Assessment -->
+  <div class="card"><div class="card-title">${t('conditionAssessment')}</div>
+    <table class="mini-table">${cats.map(([key,label])=>{const r=S[key];return`<tr><td class="cat">${label}</td><td><span class="rating-pill ${r?'pill-'+r:'pill-none'}">${r||'—'}</span></td></tr>`;}).join('')}</table>
+  </div>
+
+  <!-- Customer goals -->
+  ${(impSel.length||presSel.length)?`<div class="card"><div class="card-title">${t('customerGoals')}</div>
+    ${impSel.length?`<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">${t('improveSummaryLabel')}</div><div style="font-size:14px;line-height:1.8">${impSel.map(o=>`✓ ${o}`).join('<br>')}</div></div>`:''}
+    ${presSel.length?`<div><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">${t('preserveSummaryLabel')}</div><div style="font-size:14px;line-height:1.8">${presSel.map(o=>`✓ ${o}`).join('<br>')}</div></div>`:''}
+  </div>`:''}
+
+  <!-- Recommendations -->
+  <div class="card"><div class="card-title">${t('recommendations')}</div>
+    ${recs.length?`<div class="rec-list">${recs.map(r=>`<div class="rec-item"><span>${r.icon}</span><span>${tr(r.key)}</span></div>`).join('')}</div>`:`<div class="no-recs">${t('noRecs')}</div>`}
+  </div>
+
+  <!-- Tech notes -->
+  <div class="card"><div class="card-title">${t('techNotes')}</div>
+    <textarea class="form-textarea" id="techNotes" placeholder="${t('notesPlaceholder')}" style="min-height:90px">${esc(S.techNotes)}</textarea>
+  </div>`;
+}
+
+function renderNav() {
+  const el=document.getElementById('nav-inner');
+  if(S.step===1) el.innerHTML=`<button class="btn btn-next" onclick="goNext()">${t('next')}</button>`;
+  else if(S.step<5) el.innerHTML=`<button class="btn btn-back" onclick="goBack()">${t('back')}</button><button class="btn btn-next" onclick="goNext()">${t('next')}</button>`;
+  else el.innerHTML=`<button class="btn btn-back" onclick="goBack()">${t('back')}</button><button class="btn btn-pdf btn-next" onclick="generatePDF()"><span>${t('pdfIcon')}</span> ${t('generatePDF')}</button>`;
+}
+
+// ── Event handlers ────────────────────────────────────────────────
+function attachListeners() {
+  const bind=(id,key)=>{const el=document.getElementById(id);if(el)el.addEventListener('input',e=>{S[key]=e.target.value;save();});};
+  bind('improveComment','improveComment');bind('preserveComment','preserveComment');
+  ['customerName','manufacturer','model','serialNumber','year','inspectionDate'].forEach(k=>bind('f-'+k,k));
+  ['humidity','pitch','downweight'].forEach(k=>bind('f-'+k,k));
+  bind('techNotes','techNotes');
+  if(S.step===5) updateSummaryPreview();
+}
+
+window.toggleImprove=i=>{
+  S.improve[i]=!S.improve[i];
+  const items=document.querySelectorAll('#main-content .card:nth-child(2) .cb-item');
+  if(items[i]){items[i].classList.toggle('checked',S.improve[i]);const cb=items[i].querySelector('input');if(cb)cb.checked=S.improve[i];}
+  save();
+};
+window.togglePreserve=i=>{
+  S.preserve[i]=!S.preserve[i];
+  const items=document.querySelectorAll('#main-content .card:nth-child(3) .cb-item');
+  if(items[i]){items[i].classList.toggle('checked',S.preserve[i]);const cb=items[i].querySelector('input');if(cb)cb.checked=S.preserve[i];}
+  save();
+};
+window.setRating=(key,val)=>{
+  S[key]=val;
+  const order=['touch','tone','action','hammers','pedals','tuningStability'];
+  const idx=order.indexOf(key);
+  const rows=document.querySelectorAll('.assess-row');
+  if(idx>=0&&rows[idx])rows[idx].querySelectorAll('.rating-btn').forEach((btn,bi)=>{const r=['A','B','C','D'][bi];btn.className='rating-btn'+(val===r?' sel-'+r:'');});
+  save();
+};
+window.setQual=(id,val)=>{S[id]=S[id]===val?'':val;render();};
+
+window.toggleFinding=(cat,idx)=>{
+  if(!S.findings[cat]) S.findings[cat]=Array(FD[cat].items.length).fill(false);
+  S.findings[cat][idx]=!S.findings[cat][idx];
+  const lbl=document.querySelector(`[data-finding="${cat}-${idx}"]`);
+  if(lbl){lbl.classList.toggle('checked',S.findings[cat][idx]);const cb=lbl.querySelector('input');if(cb)cb.checked=S.findings[cat][idx];}
+  updateSummaryPreview();
+  save();
+};
+
+function updateSummaryPreview() {
+  const el=document.getElementById('summary-preview');
+  if(!el) return;
+  const text=generateTechnicianSummary();
+  if(text){
+    el.innerHTML=esc(text).replace(/\n\n/g,'<br><br>');
+    el.classList.add('active');
+  } else {
+    el.innerHTML=`<span class="summary-hint">${t('noFindingsHint')}</span>`;
+    el.classList.remove('active');
+  }
+}
+
+function collectStep(){
+  if(S.step===2)['customerName','manufacturer','model','serialNumber','year','inspectionDate'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)S[k]=el.value;});
+  if(S.step===4)['humidity','pitch','downweight'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)S[k]=el.value;});
+  if(S.step===5){const el=document.getElementById('techNotes');if(el)S.techNotes=el.value;}
+  save();
+}
+function goNext(){collectStep();if(S.step<5){S.step++;render();window.scrollTo(0,0);}}
+function goBack(){collectStep();if(S.step>1){S.step--;render();window.scrollTo(0,0);}}
+
+// ── PDF generation ────────────────────────────────────────────────
+async function generatePDF() {
+  collectStep();
+  const overlay=document.getElementById('overlay');
+  document.getElementById('overlay-text').textContent=t('generatingPDF');
+  overlay.style.display='flex';
+  try {
+    await new Promise(r=>setTimeout(r,60));
+    buildPDFTemplate();
+    await new Promise(r=>setTimeout(r,180));
+    const tmpl=document.getElementById('pdf-template');
+    const canvas=await html2canvas(tmpl,{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff',width:820});
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    const pdfW=pdf.internal.pageSize.getWidth(),pdfH=pdf.internal.pageSize.getHeight();
+    const margin=8,availW=pdfW-margin*2;
+    const imgH=availW*(canvas.height/canvas.width);
+    if(imgH<=pdfH-margin*2){
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,availW,imgH);
+    } else {
+      const pageH=pdfH-margin*2,scale=availW/canvas.width;
+      let srcY=0,page=0;
+      while(srcY<canvas.height){
+        if(page>0)pdf.addPage();
+        const srcH=Math.min(pageH/scale,canvas.height-srcY);
+        const pc=document.createElement('canvas');pc.width=canvas.width;pc.height=srcH;
+        pc.getContext('2d').drawImage(canvas,0,srcY,canvas.width,srcH,0,0,canvas.width,srcH);
+        pdf.addImage(pc.toDataURL('image/jpeg',0.95),'JPEG',margin,margin,availW,srcH*scale);
+        srcY+=srcH;page++;
+      }
+    }
+    pdf.save(`piano-health-report-${S.inspectionDate||'report'}.pdf`);
+  } catch(err){console.error(err);alert('PDF generation failed. Please try again.');}
+  finally{overlay.style.display='none';}
+}
+
+function buildPDFTemplate() {
+  const status=getOverallStatus()||'good', recs=getRecommendations();
+  const io=t('improveOpts'),po=t('preserveOpts');
+  const impSel=io.filter((_,i)=>S.improve[i]),presSel=po.filter((_,i)=>S.preserve[i]);
+  const cats=[['touch',t('touch')],['tone',t('tone')],['action',t('action')],['hammers',t('hammers')],['pedals',t('pedals')],['tuningStability',t('tuningStability')]];
+  const keyPoints=getKeyFocusPoints(status), nextStep=getNextStepText(recs);
+  const techSummary=generateTechnicianSummary();
+
+  const ratingColor={A:'#16a34a',B:'#65a30d',C:'#d97706',D:'#dc2626'};
+  const ratingBg   ={A:'#dcfce7',B:'#ecfccb',C:'#fef3c7',D:'#fee2e2'};
+  const sc={
+    excellent:{bg:'#dcfce7',border:'#86efac',dot:'#16a34a',text:'#14532d'},
+    good:     {bg:'#ecfccb',border:'#bef264',dot:'#65a30d',text:'#365314'},
+    fair:     {bg:'#fef3c7',border:'#fcd34d',dot:'#d97706',text:'#78350f'},
+    attention:{bg:'#fee2e2',border:'#fca5a5',dot:'#dc2626',text:'#7f1d1d'},
+  }[status];
+
+  const pianoLine=[S.manufacturer,S.model].filter(Boolean).join(' ')||t('pdfNotSpecified');
+  const snYear=[S.serialNumber?`S/N: ${S.serialNumber}`:'',S.year||''].filter(Boolean).join('  ·  ');
+  const dateStr=S.inspectionDate||new Date().toISOString().split('T')[0];
+
+  const sh=(label,color='#1e3a5f')=>`<div style="font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:${color};padding-bottom:6px;margin-bottom:10px;border-bottom:2px solid ${color}">${label}</div>`;
+  const bullet=(txt,col='#1e3a5f')=>`<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:3px"><span style="color:${col};font-weight:900;font-size:11px;line-height:1.5">•</span><span style="font-size:11px;color:#334155;line-height:1.5">${txt}</span></div>`;
+  const check=(txt,col='#2563eb')=>`<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:3px"><span style="color:${col};font-size:11px;line-height:1.5">✓</span><span style="font-size:11px;color:#334155;line-height:1.5">${txt}</span></div>`;
+
+  const numFields=[
+    {key:'humidity',label:t('humidity').replace(/ \(%\)/,'').replace('（%）',''),unit:'%'},
+    {key:'pitch',   label:t('pitch').replace(/ \(Hz\)/,'').replace('（Hz）',''),unit:'Hz'},
+    {key:'downweight',label:t('downweight').replace(/ \(g\)/,'').replace('（g）',''),unit:'g'},
+  ].filter(f=>S[f.key]);
+  const qualFields=[{key:'keyDip',label:t('keyDip')},{key:'letOff',label:t('letOff')}].filter(f=>S[f.key]);
+  const hasMeasure=numFields.length||qualFields.length;
+
+  const recCardsHTML=recs.map(r=>{
+    const {reasons,benefits}=buildRecDetail(r.key);
+    return `<div style="border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 15px;margin-bottom:9px;background:#fafbfc">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid #e2e8f0">
+        <span style="font-size:16px">${r.icon}</span>
+        <span style="font-size:13px;font-weight:900;color:#1e3a5f">${tr(r.key)}</span>
+      </div>
+      <div style="display:flex;gap:14px">
+        <div style="flex:1">
+          <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin-bottom:5px">${t('pdfReason')}</div>
+          ${reasons.map(s=>bullet(s,'#d97706')).join('')}${!reasons.length?`<div style="font-size:11px;color:#94a3b8">—</div>`:''}
+        </div>
+        <div style="flex:1">
+          <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#16a34a;margin-bottom:5px">${t('pdfBenefits')}</div>
+          ${benefits.map(s=>bullet(s,'#16a34a')).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Tech summary paragraphs for PDF
+  const summaryParasHTML=techSummary
+    ? techSummary.split('\n\n').map(p=>`<p style="font-size:12px;color:#334155;line-height:1.75;margin-bottom:8px">${esc(p)}</p>`).join('')
+    : '';
+
+  document.getElementById('pdf-template').innerHTML=`
+  <div style="background:#fff;padding:26px 30px;font-family:'Helvetica Neue',Arial,sans-serif;color:#1a202c;width:820px">
+
+    <!-- HEADER -->
+    <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:12px;padding:18px 24px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;color:#fff">
+      <div>
+        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:.75;margin-bottom:3px">🎹 ${t('pdfHeaderSub')}</div>
+        <div style="font-size:21px;font-weight:900;letter-spacing:-.5px">${esc(pianoLine)}</div>
+        ${snYear?`<div style="font-size:11px;opacity:.75;margin-top:2px">${esc(snYear)}</div>`:''}
+      </div>
+      <div style="text-align:right">
+        ${S.customerName?`<div style="font-size:14px;font-weight:700">${esc(S.customerName)}</div>`:''}
+        <div style="font-size:11px;opacity:.8;margin-top:2px">${dateStr}</div>
+      </div>
+    </div>
+
+    <!-- 1. OVERALL CONDITION -->
+    <div style="border:2px solid ${sc.border};background:${sc.bg};border-radius:12px;padding:16px 20px;margin-bottom:14px">
+      <div style="font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:${sc.text};opacity:.7;margin-bottom:8px">${t('pdfSectionOverall')}</div>
+      <div style="display:flex;align-items:flex-start;gap:18px">
+        <div style="width:56px;height:56px;background:${sc.dot};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0">${statusEmoji(status)}</div>
+        <div style="flex:1">
+          <div style="font-size:21px;font-weight:900;color:${sc.text};margin-bottom:5px">${statusLabel(status)}</div>
+          <div style="font-size:11px;color:${sc.text};line-height:1.6;margin-bottom:${keyPoints.length?'8px':'0'}">${getOverallContextText(status)}</div>
+          ${keyPoints.length?`<div style="margin-bottom:8px">${keyPoints.map(p=>`<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:2px"><span style="font-size:11px;color:${sc.dot}">▶</span><span style="font-size:11px;color:${sc.text};font-weight:600">${p}</span></div>`).join('')}</div>`:''}
+          <div style="background:rgba(255,255,255,0.6);border-radius:8px;padding:7px 12px;display:inline-flex;align-items:center;gap:10px">
+            <span style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${sc.text};opacity:.7">${t('pdfNextStep')}</span>
+            <span style="font-size:12px;font-weight:800;color:${sc.dot}">${esc(nextStep)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. CUSTOMER GOALS -->
+    ${(impSel.length||presSel.length||S.improveComment||S.preserveComment)?`
+    <div style="border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;background:#f8fafc">
+      ${sh(t('pdfSectionGoals'),'#2563eb')}
+      <div style="display:flex;gap:22px">
+        ${(impSel.length||S.improveComment)?`<div style="flex:1">
+          <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">${t('pdfImprove')}</div>
+          ${impSel.map(o=>check(o,'#2563eb')).join('')}
+          ${S.improveComment?`<div style="margin-top:5px;padding:5px 9px;background:#eff6ff;border-radius:6px;font-size:11px;color:#475569;font-style:italic">${esc(S.improveComment)}</div>`:''}
+        </div>`:''}
+        ${(presSel.length||S.preserveComment)?`<div style="flex:1">
+          <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">${t('pdfPreserve')}</div>
+          ${presSel.map(o=>check(o,'#22c55e')).join('')}
+          ${S.preserveComment?`<div style="margin-top:5px;padding:5px 9px;background:#f0fdf4;border-radius:6px;font-size:11px;color:#475569;font-style:italic">${esc(S.preserveComment)}</div>`:''}
+        </div>`:''}
+      </div>
+    </div>`:''}
+
+    <!-- 3. TECHNICIAN SUMMARY -->
+    ${techSummary?`
+    <div style="border:1px solid #dbeafe;border-radius:12px;padding:14px 18px;margin-bottom:14px;background:#f0f7ff">
+      ${sh(t('pdfSectionTechSummary'),'#1d4ed8')}
+      ${summaryParasHTML}
+    </div>`:''}
+
+    <!-- 4+5. CONDITION ASSESSMENT + MEASUREMENTS (two-col) -->
+    <div style="display:flex;gap:14px;margin-bottom:14px">
+      <div style="flex:1.1;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fafbfc">
+        ${sh(t('pdfSectionAssess'))}
+        <table style="width:100%;border-collapse:collapse">
+          ${cats.map(([key,label])=>{const r=S[key];const bg=r?ratingBg[r]:'#f1f5f9';const col=r?ratingColor[r]:'#94a3b8';return`<tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569">${label}</td><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;text-align:right"><span style="background:${bg};color:${col};font-weight:800;font-size:12px;padding:2px 10px;border-radius:20px">${r||'—'}</span></td></tr>`;}).join('')}
+        </table>
+      </div>
+      ${hasMeasure?`<div style="flex:1;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fafbfc">
+        ${sh(t('pdfSectionMeasure'))}
+        ${numFields.map(f=>{const st=getMeasurementStatus(f.key,S[f.key]);return`<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e2e8f0">
+          <div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${f.label}</div>
+          <div style="display:flex;align-items:baseline;gap:5px">
+            <span style="font-size:19px;font-weight:900;color:#1e3a5f">${esc(S[f.key])}</span>
+            <span style="font-size:11px;color:#64748b">${f.unit}</span>
+            ${st?`<span style="margin-left:auto;font-size:10px;font-weight:800;color:${st.color};background:${st.color}18;padding:1px 7px;border-radius:10px">${st.label}</span>`:''}
+          </div>
+          ${st?`<div style="font-size:10px;color:${st.color};margin-top:1px">${st.note}</div>`:''}
+        </div>`;}).join('')}
+        ${qualFields.map(f=>`<div style="margin-bottom:8px"><div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${f.label}</div><div style="font-size:13px;font-weight:700;color:#1e3a5f">${t(S[f.key])}</div></div>`).join('')}
+      </div>`:''}
+    </div>
+
+    <!-- 6. RECOMMENDED SERVICES -->
+    ${recs.length?`<div style="margin-bottom:14px">${sh(t('pdfSectionRec'))}${recCardsHTML}</div>`:''}
+
+    <!-- 7. TECHNICIAN NOTES -->
+    <div style="margin-bottom:16px">
+      ${sh(t('pdfSectionNotes'))}
+      <div style="min-height:44px;padding:10px 13px;background:#f8fafc;border-radius:9px;border:1px solid #e2e8f0;font-size:12px;color:#475569;line-height:1.7">
+        ${S.techNotes?esc(S.techNotes).replace(/\n/g,'<br>'):`<span style="color:#cbd5e1">${t('pdfNone')}</span>`}
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid #e2e8f0;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:9px;color:#94a3b8;max-width:480px">${t('pdfFooter')}</div>
+      <div style="font-size:9px;color:#94a3b8;white-space:nowrap">🎹 Piano Health Report</div>
+    </div>
+  </div>`;
+}
+
+// ── Utils ─────────────────────────────────────────────────────────
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+render();
+</script>
+</body>
+</html>
