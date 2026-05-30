@@ -17,9 +17,17 @@
       --C: #d97706; --C-bg: #fef3c7; --C-border: #fcd34d;
       --D: #dc2626; --D-bg: #fee2e2; --D-border: #fca5a5;
     }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 88px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Segoe UI', sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 88px;
+    }
 
-    .app-header { background: linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff; padding:14px 18px 10px; position:sticky; top:0; z-index:200; box-shadow:0 2px 12px rgba(30,58,95,.35); }
+    /* ── Header ── */
+    .app-header {
+      background: linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff;
+      padding:14px 20px 10px; position:sticky; top:0; z-index:200;
+      box-shadow:0 2px 12px rgba(30,58,95,.35);
+    }
     .header-top { display:flex; align-items:center; gap:10px; }
     .header-icon { font-size:22px; line-height:1; }
     .header-text h1 { font-size:17px; font-weight:800; letter-spacing:-.3px; }
@@ -28,28 +36,80 @@
     .progress-seg { flex:1; height:3px; border-radius:2px; background:rgba(255,255,255,.25); transition:background .3s; }
     .progress-seg.done   { background:rgba(255,255,255,.65); }
     .progress-seg.active { background:#fff; }
-    .progress-label { font-size:11px; opacity:.8; white-space:nowrap; margin-left:4px; }
+    .progress-label { font-size:11px; opacity:.8; white-space:nowrap; margin-left:6px; }
 
-    .main { max-width:580px; margin:0 auto; padding:18px 14px 4px; }
-    .step-header { margin-bottom:18px; }
+    /* ── Layout ── */
+    .main { max-width:820px; margin:0 auto; padding:20px 16px 4px; }
+    .step-header { margin-bottom:20px; }
     .step-num   { font-size:11px; font-weight:700; color:var(--primary-light); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
-    .step-title { font-size:22px; font-weight:800; color:var(--text); line-height:1.2; }
+    .step-title { font-size:24px; font-weight:800; color:var(--text); line-height:1.2; }
     .step-desc  { font-size:14px; color:var(--muted); margin-top:4px; }
 
-    .card { background:var(--card); border-radius:var(--radius); padding:18px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,.07),0 0 0 1px rgba(0,0,0,.04); }
+    /* ── Cards ── */
+    .card { background:var(--card); border-radius:var(--radius); padding:20px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,.07),0 0 0 1px rgba(0,0,0,.04); }
     .card-title { font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--primary-mid); margin-bottom:14px; padding-bottom:10px; border-bottom:1.5px solid var(--border); }
+    .card-sub { font-size:12px; color:var(--muted); margin-top:-8px; margin-bottom:14px; }
 
-    .cb-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    /* ── Checkboxes ── */
+    .cb-grid   { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .cb-grid-1 { display:grid; grid-template-columns:1fr; gap:8px; }
-    .cb-item { display:flex; align-items:center; gap:9px; padding:10px 12px; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:background .12s,border-color .12s; -webkit-tap-highlight-color:transparent; }
+    .cb-item { display:flex; align-items:center; gap:9px; padding:11px 14px; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; transition:background .12s,border-color .12s; -webkit-tap-highlight-color:transparent; }
     .cb-item.checked { background:#eff6ff; border-color:var(--primary-light); }
-    .cb-item input[type=checkbox] { width:17px; height:17px; accent-color:var(--primary-mid); cursor:pointer; flex-shrink:0; }
-    .cb-item span { font-size:13px; color:var(--text); user-select:none; line-height:1.3; }
+    .cb-item input[type=checkbox] { width:18px; height:18px; accent-color:var(--primary-mid); cursor:pointer; flex-shrink:0; }
+    .cb-item span { font-size:14px; color:var(--text); user-select:none; line-height:1.3; }
 
-    .findings-cat { margin-bottom:16px; }
-    .findings-cat:last-child { margin-bottom:0; }
-    .findings-cat-label { font-size:13px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+    /* ── Service selection cards ── */
+    .service-grid { display:grid; grid-template-columns:1fr; gap:10px; }
+    @media (min-width:520px)  { .service-grid { grid-template-columns:1fr 1fr; } }
+    @media (min-width:720px)  { .service-grid { grid-template-columns:1fr 1fr 1fr; } }
 
+    .svc-card {
+      border:2px solid var(--border); border-radius:12px; padding:14px 16px;
+      cursor:pointer; transition:all .15s; background:#fff;
+      -webkit-tap-highlight-color:transparent; position:relative;
+    }
+    .svc-card:active { transform:scale(.98); }
+    .svc-card.selected {
+      border-color:var(--primary-light); background:#eff6ff;
+    }
+    .svc-card.suggested:not(.selected) {
+      border-color:#bfdbfe; background:#f8fbff;
+    }
+    .svc-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
+    .svc-card-name { font-size:15px; font-weight:800; color:var(--text); line-height:1.2; }
+    .svc-card-hours {
+      font-size:13px; font-weight:800; color:var(--primary-mid);
+      background:#dbeafe; padding:2px 9px; border-radius:20px; white-space:nowrap; flex-shrink:0;
+    }
+    .svc-card.selected .svc-card-hours { background:var(--primary-mid); color:#fff; }
+    .svc-card-benefit { font-size:12px; color:var(--muted); line-height:1.5; margin-bottom:6px; }
+    .svc-card-reason  { font-size:11px; color:#94a3b8; line-height:1.4; }
+    .svc-check {
+      position:absolute; top:10px; right:10px;
+      width:22px; height:22px; border-radius:50%;
+      border:2px solid var(--border); background:#fff;
+      display:flex; align-items:center; justify-content:center;
+      font-size:12px; transition:all .15s;
+    }
+    .svc-card.selected .svc-check { background:var(--primary-mid); border-color:var(--primary-mid); color:#fff; }
+    .svc-suggest-badge {
+      display:inline-block; font-size:9px; font-weight:800; letter-spacing:.5px;
+      text-transform:uppercase; color:#2563eb; background:#dbeafe;
+      padding:1px 6px; border-radius:8px; margin-bottom:6px;
+    }
+
+    /* ── Time total ── */
+    .time-total {
+      background:linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff;
+      border-radius:12px; padding:16px 20px;
+      display:flex; align-items:center; justify-content:space-between;
+      margin-top:12px;
+    }
+    .time-total-label { font-size:13px; font-weight:700; opacity:.85; }
+    .time-total-value { font-size:28px; font-weight:900; letter-spacing:-.5px; }
+    .time-total-unit  { font-size:14px; font-weight:600; opacity:.8; margin-left:4px; }
+
+    /* ── Technician summary ── */
     .summary-preview {
       background:#f8fafc; border:1.5px solid var(--border); border-radius:10px;
       padding:14px 16px; font-size:14px; line-height:1.8; color:#334155;
@@ -58,20 +118,27 @@
     .summary-preview.active { background:#eff6ff; border-color:#bfdbfe; }
     .summary-hint { color:#94a3b8; font-size:13px; font-style:italic; }
 
+    /* ── Findings ── */
+    .findings-cat { margin-bottom:14px; }
+    .findings-cat:last-child { margin-bottom:0; }
+    .findings-cat-label { font-size:13px; font-weight:700; color:var(--text); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+
+    /* ── Form ── */
     .form-group { margin-bottom:13px; }
     .form-group:last-child { margin-bottom:0; }
     label.form-label { display:block; font-size:12px; font-weight:700; color:var(--muted); margin-bottom:5px; letter-spacing:.3px; }
     .form-input, .form-textarea {
-      width:100%; padding:11px 13px; border:1.5px solid var(--border); border-radius:10px;
+      width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:10px;
       font-size:15px; color:var(--text); background:#fff;
       transition:border-color .15s,box-shadow .15s;
       -webkit-appearance:none; appearance:none; font-family:inherit;
     }
     .form-input:focus, .form-textarea:focus { outline:none; border-color:var(--primary-light); box-shadow:0 0 0 3px rgba(59,130,246,.15); }
-    .form-textarea { min-height:78px; resize:vertical; line-height:1.5; }
+    .form-textarea { min-height:82px; resize:vertical; line-height:1.5; }
     .input-row   { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     .input-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
 
+    /* ── Assessment ratings ── */
     .assess-row { margin-bottom:14px; }
     .assess-name { font-size:14px; font-weight:600; color:var(--text); margin-bottom:7px; }
     .rating-row { display:flex; gap:7px; }
@@ -83,23 +150,22 @@
     .rating-btn.sel-C { background:var(--C-bg); border-color:var(--C-border); color:var(--C); }
     .rating-btn.sel-D { background:var(--D-bg); border-color:var(--D-border); color:var(--D); }
 
+    /* ── Qualitative ── */
     .qual-row { display:flex; gap:7px; }
-    .qual-btn { flex:1; padding:9px 4px; border-radius:9px; border:1.5px solid var(--border); background:#fff; font-size:13px; font-weight:600; cursor:pointer; text-align:center; color:var(--muted); transition:all .12s; -webkit-tap-highlight-color:transparent; }
+    .qual-btn { flex:1; padding:10px 4px; border-radius:9px; border:1.5px solid var(--border); background:#fff; font-size:13px; font-weight:600; cursor:pointer; text-align:center; color:var(--muted); transition:all .12s; -webkit-tap-highlight-color:transparent; }
     .qual-btn.sel { background:#eff6ff; border-color:var(--primary-light); color:var(--primary-mid); }
 
-    .status-card { border-radius:12px; padding:16px 18px; display:flex; align-items:center; gap:16px; }
-    .status-dot  { width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:900; color:#fff; flex-shrink:0; }
-    .status-info h2 { font-size:20px; font-weight:800; line-height:1.2; }
+    /* ── Status badge ── */
+    .status-card { border-radius:12px; padding:14px 18px; display:flex; align-items:center; gap:14px; }
+    .status-dot  { width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:900; color:#fff; flex-shrink:0; }
+    .status-info h2 { font-size:19px; font-weight:800; line-height:1.2; }
     .status-info p  { font-size:13px; opacity:.8; margin-top:3px; }
     .s-excellent { background:#dcfce7; } .s-excellent .status-dot { background:#16a34a; } .s-excellent .status-info { color:#14532d; }
     .s-good      { background:#ecfccb; } .s-good .status-dot      { background:#65a30d; } .s-good .status-info      { color:#365314; }
     .s-fair      { background:#fef3c7; } .s-fair .status-dot      { background:#d97706; } .s-fair .status-info      { color:#78350f; }
     .s-attention { background:#fee2e2; } .s-attention .status-dot { background:#dc2626; } .s-attention .status-info { color:#7f1d1d; }
 
-    .rec-list { display:flex; flex-direction:column; gap:9px; }
-    .rec-item { display:flex; align-items:center; gap:11px; padding:12px 14px; background:#f0f7ff; border-left:3px solid var(--primary-light); border-radius:0 10px 10px 0; font-size:14px; font-weight:500; color:var(--text); }
-    .no-recs { color:var(--muted); font-size:14px; text-align:center; padding:16px; }
-
+    /* ── Mini table ── */
     .mini-table { width:100%; border-collapse:collapse; }
     .mini-table td { padding:8px 0; border-bottom:1px solid var(--border); font-size:14px; }
     .mini-table tr:last-child td { border-bottom:none; }
@@ -109,14 +175,16 @@
     .pill-C { background:var(--C-bg); color:var(--C); } .pill-D { background:var(--D-bg); color:var(--D); }
     .pill-none { background:var(--border); color:var(--muted); }
 
+    /* ── Nav ── */
     .nav-wrap  { position:fixed; bottom:0; left:0; right:0; background:rgba(255,255,255,.95); backdrop-filter:blur(10px); border-top:1px solid var(--border); z-index:200; }
-    .nav-inner { max-width:580px; margin:0 auto; padding:10px 14px 14px; display:flex; gap:10px; }
+    .nav-inner { max-width:820px; margin:0 auto; padding:10px 16px 14px; display:flex; gap:10px; }
     .btn { flex:1; padding:14px; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; transition:all .15s; -webkit-tap-highlight-color:transparent; font-family:inherit; }
     .btn:active { transform:scale(.97); }
-    .btn-back { background:var(--border); color:var(--muted); flex:.6; }
+    .btn-back { background:var(--border); color:var(--muted); flex:.5; }
     .btn-next { background:var(--primary); color:#fff; }
     .btn-pdf  { flex:1.4; background:linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; }
 
+    /* ── Overlay ── */
     .overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1000; color:#fff; }
     .overlay .spin { width:48px; height:48px; border:4px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; margin-bottom:16px; }
     @keyframes spin { to { transform:rotate(360deg); } }
@@ -126,7 +194,7 @@
 
     #pdf-template { position:fixed; left:-9999px; top:0; width:820px; background:#fff; font-family:'Helvetica Neue',Arial,sans-serif; }
 
-    @media (max-width:380px) { .cb-grid { grid-template-columns:1fr; } .input-row { grid-template-columns:1fr; } }
+    @media (max-width:480px) { .cb-grid { grid-template-columns:1fr; } .input-row { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -170,6 +238,7 @@ const T = {
   en: {
     appTitle:'Piano Health Report', appSub:'Professional Report Tool for Piano Technicians',
     step:'Step', of:'of',
+    // Step 1
     s1Title:'Customer Goals', s1Desc:'Record what the customer wants to improve and preserve',
     s1Card:'Customer Feedback',
     s1Q1:'What would you like to improve?',
@@ -177,51 +246,60 @@ const T = {
     s1Q2:'What would you like to preserve?',
     preserveOpts:['Current tone','Current touch','Current volume','Overall character'],
     additionalComments:'Additional comments',
+    // Step 2
     s2Title:'Piano Information', s2Desc:'Enter piano and customer details',
     customerName:'Customer Name', manufacturer:'Manufacturer', model:'Model',
     serialNumber:'Serial Number', year:'Year', inspectionDate:'Inspection Date',
+    // Step 3
     s3Title:'Technician Assessment', s3Desc:'Rate each category',
     ratingGuide:'A = Excellent · B = Good · C = Maintenance Needed · D = Repair Needed',
     touch:'Touch', tone:'Tone', action:'Action', hammers:'Hammers', pedals:'Pedals', tuningStability:'Tuning Stability',
     rA:'A', rAl:'Excellent', rB:'B', rBl:'Good', rC:'C', rCl:'Maint.', rD:'D', rDl:'Repair',
+    // Step 4
     s4Title:'Measured Values', s4Desc:'Enter measurement data (all optional)',
     humidity:'Humidity (%)', pitch:'Pitch (Hz)', downweight:'Downweight (g)',
     keyDip:'Key Dip', letOff:'Let-off',
     normal:'Normal', shallow:'Shallow', deep:'Deep', wide:'Wide', close:'Close',
-    s5Title:'Summary & Report', s5Desc:'Enter findings, review, and generate the PDF',
+    // Step 5
+    s5Title:'Findings & Proposal', s5Desc:'Enter findings, select services, and generate the report',
     techFindings:'Technician Findings',
     techFindingsDesc:'Check all that apply — summary is generated automatically',
     techSummaryTitle:'Technician Summary',
     techSummaryAuto:'Auto-generated from selections above',
     noFindingsHint:'Select findings above to generate a summary…',
-    overallCondition:'Overall Condition', conditionAssessment:'Condition Assessment',
-    customerGoals:'Customer Goals', recommendations:'Recommended Services',
+    selectServices:'Recommended Services',
+    selectServicesDesc:'Select services to recommend — total time is calculated automatically',
+    suggested:'Relevant',
+    estimatedTime:'Estimated Service Time',
+    hours:'hours', hour:'hour',
+    noServicesSelected:'No services selected yet.',
+    overallCondition:'Overall Condition',
+    conditionAssessment:'Condition Assessment (Supporting Reference)',
+    customerGoals:'Customer Goals',
     techNotes:'Technician Notes', notesPlaceholder:'Add supplementary notes (optional)…',
-    noRecs:'No specific recommendations — piano is in good condition.',
+    // Status
     excellent:'Excellent', good:'Good', fair:'Fair', attention:'Needs Attention',
     back:'Back', next:'Next →', generatePDF:'Generate PDF', pdfIcon:'📄',
     improveSummaryLabel:'To Improve', preserveSummaryLabel:'To Preserve',
-    rec:{
-      voicing:'Voicing', hammerShaping:'Hammer Shaping', hammerReplacement:'Hammer Replacement Evaluation',
-      toneImprovement:'Tone Improvement Service', pitchStabilization:'Pitch Stabilization',
-      pinInspection:'Tuning Pin Inspection', actionRegulation:'Action Regulation', pedalService:'Pedal Service',
-    },
+    // PDF
     pdfHeaderSub:'Piano Health Report',
-    pdfSectionOverall:'OVERALL CONDITION',
-    pdfSectionGoals:'CUSTOMER GOALS',
-    pdfSectionTechSummary:'TECHNICIAN SUMMARY',
-    pdfSectionAssess:'CONDITION ASSESSMENT',
-    pdfSectionMeasure:'MEASURED VALUES',
-    pdfSectionRec:'RECOMMENDED SERVICES',
-    pdfSectionNotes:'TECHNICIAN NOTES',
+    pdfGoals:'CUSTOMER GOALS',
+    pdfTechSummary:'TECHNICIAN SUMMARY',
+    pdfServices:'RECOMMENDED SERVICES',
+    pdfEstTime:'ESTIMATED SERVICE TIME',
+    pdfBenefits:'EXPECTED BENEFITS',
+    pdfAssessment:'CONDITION ASSESSMENT',
+    pdfMeasure:'MEASURED VALUES',
+    pdfNotes:'TECHNICIAN NOTES',
     pdfKeyFocus:'KEY FOCUS', pdfNextStep:'RECOMMENDED NEXT STEP',
     pdfImprove:'Things to Improve', pdfPreserve:'Things to Preserve',
-    pdfReason:'Reason', pdfBenefits:'Expected Benefits',
+    pdfWhyRec:'Why Recommended',
+    pdfExpBenefit:'Expected Benefit',
     pdfNotSpecified:'Not specified', pdfNone:'—',
-    pdfFooter:"This report was prepared to help communicate the piano's current condition and service recommendations.",
+    pdfFooter:"This report was prepared to help communicate the piano's condition and service recommendations.",
     generatingPDF:'Generating PDF…',
     ctxExcellent:'The piano is in outstanding condition. Continued regular maintenance will help sustain this level.',
-    ctxGood:'The piano is in good overall condition. Some age-related changes are noted, but playability is solid.',
+    ctxGood:'The piano is in good overall condition. Some age-related changes are noted.',
     ctxFair:'Several areas would benefit from service. Addressing these now will maintain long-term playability.',
     ctxAttention:'Some areas require prompt attention. Delayed service may lead to further deterioration.',
     humLow:'Low', humNormal:'Normal', humHigh:'High',
@@ -253,42 +331,45 @@ const T = {
     humidity:'湿度 (%)', pitch:'ピッチ (Hz)', downweight:'ダウンウェイト (g)',
     keyDip:'鍵盤深さ', letOff:'レットオフ',
     normal:'標準', shallow:'浅い', deep:'深い', wide:'広い', close:'狭い',
-    s5Title:'まとめ・レポート作成', s5Desc:'所見を入力して確認後、PDFを作成します',
+    s5Title:'所見・サービス提案', s5Desc:'所見を入力し、サービスを選択してレポートを作成します',
     techFindings:'技術者所見',
     techFindingsDesc:'該当するものをすべて選択してください — 総評が自動生成されます',
     techSummaryTitle:'技術者総評',
     techSummaryAuto:'上記の選択から自動生成',
     noFindingsHint:'上記の所見を選択すると総評が自動生成されます…',
-    overallCondition:'総合評価', conditionAssessment:'各部状態評価',
-    customerGoals:'お客様のご要望', recommendations:'推奨サービス',
+    selectServices:'推奨サービス選択',
+    selectServicesDesc:'提案するサービスを選択してください — 合計時間が自動集計されます',
+    suggested:'関連あり',
+    estimatedTime:'推定作業時間',
+    hours:'時間', hour:'時間',
+    noServicesSelected:'サービスが選択されていません。',
+    overallCondition:'総合評価',
+    conditionAssessment:'各部状態評価（根拠資料）',
+    customerGoals:'お客様のご要望',
     techNotes:'技術者メモ', notesPlaceholder:'補足メモを追加（任意）…',
-    noRecs:'特に推奨事項なし — ピアノは良好な状態です。',
     excellent:'優良', good:'良好', fair:'要注意', attention:'要対応',
     back:'戻る', next:'次へ →', generatePDF:'PDFを作成', pdfIcon:'📄',
     improveSummaryLabel:'改善希望', preserveSummaryLabel:'維持希望',
-    rec:{
-      voicing:'整音（ボイシング）', hammerShaping:'ハンマー整形', hammerReplacement:'ハンマー交換検討',
-      toneImprovement:'音色改善サービス', pitchStabilization:'ピッチ安定化',
-      pinInspection:'チューニングピン点検', actionRegulation:'アクション調整', pedalService:'ペダル整備',
-    },
     pdfHeaderSub:'ピアノ健康診断レポート',
-    pdfSectionOverall:'総合評価',
-    pdfSectionGoals:'お客様のご要望',
-    pdfSectionTechSummary:'技術者総評',
-    pdfSectionAssess:'各部状態評価',
-    pdfSectionMeasure:'計測値',
-    pdfSectionRec:'推奨サービス',
-    pdfSectionNotes:'技術者メモ',
+    pdfGoals:'お客様のご要望',
+    pdfTechSummary:'技術者総評',
+    pdfServices:'推奨サービス',
+    pdfEstTime:'推定作業時間',
+    pdfBenefits:'期待できる改善',
+    pdfAssessment:'各部状態評価',
+    pdfMeasure:'計測値',
+    pdfNotes:'技術者メモ',
     pdfKeyFocus:'特に注目すべき点', pdfNextStep:'推奨される次の一手',
     pdfImprove:'改善したいこと', pdfPreserve:'維持したいこと',
-    pdfReason:'推奨理由', pdfBenefits:'期待できる改善',
+    pdfWhyRec:'推奨理由',
+    pdfExpBenefit:'期待できる改善',
     pdfNotSpecified:'未入力', pdfNone:'—',
     pdfFooter:'このレポートはお客様へのピアノ状態の説明とサービス提案を目的として作成されました。',
     generatingPDF:'PDF作成中…',
-    ctxExcellent:'ピアノは非常に良好な状態です。定期的なメンテナンスを続けることで、この状態を長く維持できます。',
-    ctxGood:'全体的に良好な状態です。一部に経年変化が見られますが、演奏上の大きな問題はありません。',
-    ctxFair:'いくつかの項目でメンテナンスをお勧めします。早めに対応することで、良好な演奏状態を維持できます。',
-    ctxAttention:'緊急の対応が必要な項目があります。放置するとさらなる悪化につながる可能性があります。',
+    ctxExcellent:'ピアノは非常に良好な状態です。定期的なメンテナンスで現状を維持できます。',
+    ctxGood:'全体的に良好な状態です。一部に経年変化が見られます。',
+    ctxFair:'いくつかの項目でメンテナンスをお勧めします。早めの対応が長期状態維持につながります。',
+    ctxAttention:'緊急対応が必要な項目があります。放置するとさらなる悪化につながる可能性があります。',
     humLow:'低め', humNormal:'適正', humHigh:'高め',
     humLowNote:'乾燥注意', humNormalNote:'適正範囲内', humHighNote:'湿気・膨張注意',
     pitchLow:'低め', pitchNormal:'適正', pitchHigh:'高め',
@@ -298,8 +379,78 @@ const T = {
     nextStepMaintain:'定期メンテナンスの継続',
   }
 };
-const t  = k => T[lang][k] !== undefined ? T[lang][k] : (T.en[k] !== undefined ? T.en[k] : k);
-const tr = k => (t('rec') || {})[k] || k;
+const t = k => T[lang][k] !== undefined ? T[lang][k] : (T.en[k] !== undefined ? T.en[k] : k);
+
+// ── Service Master ────────────────────────────────────────────────
+// Future: make this editable per technician
+const SERVICE_MASTER = [
+  {
+    id:'voicing',
+    name:  { en:'Voicing',             ja:'整音（ボイシング）' },
+    hours: 3,
+    reason:{ en:'Tone harshness, brightness, or unevenness observed',
+             ja:'音色に硬さ・明るさ・ばらつきがある場合' },
+    benefit:{ en:'Softer, more even tone quality with better dynamic range',
+              ja:'より柔らかく均一な音色・ダイナミクス表現の向上' },
+    icon:'🎵',
+    suggestWhen: s => (s.hammers==='C'||s.hammers==='D'||s.tone==='C'||s.tone==='D'),
+  },
+  {
+    id:'hammerShaping',
+    name:  { en:'Hammer Shaping',      ja:'ハンマー整形' },
+    hours: 2,
+    reason:{ en:'Hammer wear or string grooves reduce tone clarity',
+             ja:'ハンマー摩耗や弦溝が見られる場合' },
+    benefit:{ en:'Clearer attack and more even tone across registers',
+              ja:'発音の明瞭化・音域全体の音色均一化' },
+    icon:'🔨',
+    suggestWhen: s => (s.hammers==='C'||s.hammers==='D'),
+  },
+  {
+    id:'regulation',
+    name:  { en:'Regulation',          ja:'アクション調整' },
+    hours: 6,
+    reason:{ en:'Touch heaviness, unevenness, or sluggish response',
+             ja:'タッチの重さ・ばらつき・反応不良がある場合' },
+    benefit:{ en:'Improved playability, consistency, and expressive control',
+              ja:'弾きやすさ向上・均一なタッチ・コントロール性改善' },
+    icon:'⚙️',
+    suggestWhen: s => (s.touch==='C'||s.touch==='D'||s.action==='C'||s.action==='D'),
+  },
+  {
+    id:'pedalAdjustment',
+    name:  { en:'Pedal Adjustment',    ja:'ペダル調整' },
+    hours: 1,
+    reason:{ en:'Pedal noise or ineffective response noted',
+             ja:'ペダルの雑音・効きの問題がある場合' },
+    benefit:{ en:'Smooth and reliable pedal operation',
+              ja:'ペダル操作の改善・スムーズな動作' },
+    icon:'🦶',
+    suggestWhen: s => (s.pedals==='C'||s.pedals==='D'),
+  },
+  {
+    id:'pitchRaise',
+    name:  { en:'Pitch Raise',         ja:'ピッチ修正' },
+    hours: 1,
+    reason:{ en:'Significant pitch drop from standard requiring stabilization before tuning',
+             ja:'基準ピッチから大きく低下しており調律前の安定化が必要' },
+    benefit:{ en:'Stable foundation for regular tuning',
+              ja:'通常調律前のピッチ安定化' },
+    icon:'🎼',
+    suggestWhen: s => { const v=parseFloat(s.pitch); return !isNaN(v)&&v<435; },
+  },
+  {
+    id:'pinInspection',
+    name:  { en:'Tuning Pin Inspection', ja:'チューニングピン点検' },
+    hours: 1,
+    reason:{ en:'Poor tuning retention suggests worn tuning pins',
+             ja:'調律保持力の低下によりチューニングピンの点検が必要' },
+    benefit:{ en:'Root cause identified and improvement plan established',
+              ja:'原因特定と適切な改善計画の立案' },
+    icon:'🔩',
+    suggestWhen: s => (s.tuningStability==='C'||s.tuningStability==='D'),
+  },
+];
 
 // ── Findings data ─────────────────────────────────────────────────
 const FINDINGS_DATA = [
@@ -343,11 +494,8 @@ FINDINGS_DATA.forEach(c => { FD[c.cat] = c; });
 // ── State ─────────────────────────────────────────────────────────
 const CATS = ['touch','tone','action','hammers','pedals','tuningStability'];
 const defaultFindings = () => ({
-  tone:    Array(4).fill(false),
-  touch:   Array(4).fill(false),
-  tuning:  Array(3).fill(false),
-  pedals:  Array(3).fill(false),
-  overall: Array(4).fill(false),
+  tone:Array(4).fill(false), touch:Array(4).fill(false),
+  tuning:Array(3).fill(false), pedals:Array(3).fill(false), overall:Array(4).fill(false),
 });
 const defaultState = () => ({
   step:1,
@@ -357,7 +505,8 @@ const defaultState = () => ({
   inspectionDate:new Date().toISOString().split('T')[0],
   touch:'', tone:'', action:'', hammers:'', pedals:'', tuningStability:'',
   humidity:'', pitch:'', downweight:'', keyDip:'', letOff:'',
-  findings: defaultFindings(),
+  findings:defaultFindings(),
+  selectedServices:[], // array of service IDs chosen by technician
   techNotes:'',
 });
 
@@ -368,6 +517,7 @@ try {
     const p = JSON.parse(saved);
     S = { ...S, ...p, step:1 };
     if (!S.findings) S.findings = defaultFindings();
+    if (!S.selectedServices) S.selectedServices = [];
     FINDINGS_DATA.forEach(c => {
       if (!S.findings[c.cat]) S.findings[c.cat] = Array(c.items.length).fill(false);
     });
@@ -378,8 +528,9 @@ function save() {
   try { localStorage.setItem('pianoHealthReport', JSON.stringify(S)); } catch(e) {}
 }
 
-// ── Logic helpers ─────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────
 const cd = r => r === 'C' || r === 'D';
+const hourStr = h => isJa ? `${h}${t('hours')}` : `${h} ${h===1?t('hour'):t('hours')}`;
 
 function getOverallStatus() {
   const rated = CATS.map(c => S[c]).filter(Boolean);
@@ -400,63 +551,18 @@ function getKeyFocusPoints(s) {
   if (f.length) pts.push(isJa?`${f.join('・')}に改善の余地があります`:`${f.join(', ')} has room for improvement`);
   return pts;
 }
-function getNextStepText(recs) {
-  if (!recs||!recs.length) return t('nextStepMaintain');
-  return tr(recs[0].key);
+
+function getSelectedServiceObjects() {
+  return SERVICE_MASTER.filter(s => S.selectedServices.includes(s.id));
 }
-function getRecommendations() {
-  const recs=[], seen=new Set();
-  const add=(icon,key)=>{if(!seen.has(key)){seen.add(key);recs.push({icon,key});}};
-  if(cd(S.hammers)){add('🔨','voicing');add('🎯','hammerShaping');if(S.hammers==='D')add('🔧','hammerReplacement');}
-  if(cd(S.tone)&&!cd(S.hammers)) add('🎵','toneImprovement');
-  if(cd(S.tuningStability)){add('🎼','pitchStabilization');add('🔩','pinInspection');}
-  if(cd(S.touch)||cd(S.action)) add('⚙️','actionRegulation');
-  if(cd(S.pedals)) add('🦶','pedalService');
-  return recs;
+function getTotalHours() {
+  return getSelectedServiceObjects().reduce((sum, s) => sum + s.hours, 0);
 }
-function buildRecDetail(key) {
-  const reasons=[], benefits=[], ci=i=>S.improve[i];
-  switch(key) {
-    case 'voicing':
-      if(S.hammers&&cd(S.hammers)) reasons.push(isJa?`ハンマーの状態評価が${S.hammers}です。`:`Hammer condition was rated ${S.hammers}.`);
-      if(S.tone&&cd(S.tone)&&!cd(S.hammers)) reasons.push(isJa?`音色評価が${S.tone}です。`:`Tone was rated ${S.tone}.`);
-      if(ci(0)) reasons.push(isJa?'「音が明るすぎる」というご要望があります。':'Customer reported the tone is too bright.');
-      if(ci(1)) reasons.push(isJa?'「音が暗すぎる」というご要望があります。':'Customer reported the tone is too dull.');
-      benefits.push(isJa?'より柔らかく均一な音色に近づきます。':'A more even and mellow tone quality.',isJa?'強弱表現がしやすくなります。':'Improved dynamic control and expressiveness.');break;
-    case 'hammerShaping':
-      if(S.hammers) reasons.push(isJa?`ハンマー表面の摩耗が評価${S.hammers}です。`:`Hammer surface wear was rated ${S.hammers}.`);
-      benefits.push(isJa?'クリアで芯のある音色になります。':'Cleaner, more focused tone.',isJa?'音域全体の均一性が向上します。':'More consistent tone across registers.');break;
-    case 'hammerReplacement':
-      reasons.push(isJa?'ハンマーの摩耗がDレベルに達しており、交換の検討が必要です。':'Hammer wear has reached level D — replacement evaluation is recommended.');
-      benefits.push(isJa?'根本的な音色の改善が期待できます。':'Fundamental improvement in tone quality.',isJa?'長期にわたり安定した演奏が可能になります。':'Reliable long-term performance.');break;
-    case 'toneImprovement':
-      if(S.tone) reasons.push(isJa?`音色評価が${S.tone}です。`:`Tone was rated ${S.tone}.`);
-      if(ci(0)) reasons.push(isJa?'「音が明るすぎる」というご要望があります。':'Customer reported the tone is too bright.');
-      if(ci(1)) reasons.push(isJa?'「音が暗すぎる」というご要望があります。':'Customer reported the tone is too dull.');
-      benefits.push(isJa?'音色バランスが改善します。':'Improved tonal balance.',isJa?'弾き心地と表現力が向上します。':'Enhanced playability and expressiveness.');break;
-    case 'pitchStabilization':
-      if(S.tuningStability) reasons.push(isJa?`調律安定性の評価が${S.tuningStability}です。`:`Tuning stability was rated ${S.tuningStability}.`);
-      if(ci(4)) reasons.push(isJa?'「調律が安定しない」というご要望があります。':'Customer reported that tuning does not hold.');
-      benefits.push(isJa?'調律が長持ちするようになります。':'Tuning holds longer between services.',isJa?'全音域にわたり安定したピッチが保たれます。':'Consistent pitch across all registers.');break;
-    case 'pinInspection':
-      if(S.tuningStability) reasons.push(isJa?`調律安定性評価${S.tuningStability}により、チューニングピンの点検が必要です。`:`Tuning stability rated ${S.tuningStability} warrants tuning pin inspection.`);
-      benefits.push(isJa?'調律不安定の根本原因を特定します。':'Identifies the root cause of tuning instability.',isJa?'長期的な調律信頼性を確保します。':'Ensures long-term tuning reliability.');break;
-    case 'actionRegulation':
-      {const parts=[];
-      if(S.touch&&cd(S.touch)) parts.push(isJa?`タッチ評価${S.touch}`:`Touch rated ${S.touch}`);
-      if(S.action&&cd(S.action)) parts.push(isJa?`アクション評価${S.action}`:`Action rated ${S.action}`);
-      if(parts.length) reasons.push(parts.join(isJa?'・':', ')+(isJa?'により調整が必要です。':' indicates regulation is needed.'));
-      if(ci(2)) reasons.push(isJa?'「タッチが重すぎる」というご要望があります。':'Customer reported touch is too heavy.');
-      if(ci(3)) reasons.push(isJa?'「タッチが軽すぎる」というご要望があります。':'Customer reported touch is too light.');}
-      benefits.push(isJa?'鍵盤の均一性と応答性が改善します。':'More even and responsive key action.',isJa?'ダイナミクスコントロールが向上します。':'Improved dynamic control.');break;
-    case 'pedalService':
-      if(S.pedals) reasons.push(isJa?`ペダルの状態評価が${S.pedals}です。`:`Pedal condition was rated ${S.pedals}.`);
-      if(ci(5)) reasons.push(isJa?'ペダルに関するご要望があります。':'Customer reported pedal concerns.');
-      benefits.push(isJa?'スムーズで安定したペダル操作が可能になります。':'Smooth, reliable pedal operation.',isJa?'サスティンとソフトペダルの機能が改善します。':'Restored sustain and soft pedal function.');break;
-  }
-  return {reasons,benefits};
+function getSuggestedIds() {
+  return SERVICE_MASTER.filter(s => s.suggestWhen(S)).map(s => s.id);
 }
-function getMeasurementStatus(field,value) {
+
+function getMeasurementStatus(field, value) {
   const v=parseFloat(value); if(isNaN(v)||value==='') return null;
   if(field==='humidity'){if(v<40)return{label:t('humLow'),note:t('humLowNote'),color:'#d97706'};if(v<=60)return{label:t('humNormal'),note:t('humNormalNote'),color:'#16a34a'};return{label:t('humHigh'),note:t('humHighNote'),color:'#dc2626'};}
   if(field==='pitch'){if(v<438)return{label:t('pitchLow'),note:t('pitchLowNote'),color:'#d97706'};if(v<=442)return{label:t('pitchNormal'),note:t('pitchNormalNote'),color:'#16a34a'};return{label:t('pitchHigh'),note:t('pitchHighNote'),color:'#d97706'};}
@@ -472,12 +578,10 @@ function joinEmbeds(items) {
   if (emb.length===2) return emb.join(isJa?'と':' and ');
   return emb.slice(0,-1).join(isJa?'・':', ')+(isJa?'および':', and ')+emb[emb.length-1];
 }
-
 function getSel(cat) {
   const bools = S.findings[cat]||[];
   return FD[cat].items.filter((_,i)=>bools[i]);
 }
-
 function generateTechnicianSummary() {
   const tone=getSel('tone'), touch=getSel('touch'), tun=getSel('tuning'),
         ped=getSel('pedals'), ov=getSel('overall');
@@ -487,63 +591,31 @@ function generateTechnicianSummary() {
   if(!any(ov)&&!anyIssue) return '';
 
   const isPlayable=ovKeys.includes('playable'), isMaint=ovKeys.includes('maintenance'),
-        isFollow=ovKeys.includes('followup'),   isRepair=ovKeys.includes('repair');
-
+        isFollow=ovKeys.includes('followup'), isRepair=ovKeys.includes('repair');
   const areas=[];
   if(any(tone))  areas.push(isJa?'音色':'tone quality');
   if(any(touch)) areas.push(isJa?'タッチ':'touch');
   if(any(tun))   areas.push(isJa?'調律安定性':'tuning stability');
   if(any(ped))   areas.push(isJa?'ペダル':'pedal function');
 
-  const areaStr = areas.length===0?'':areas.length===1?areas[0]
+  const areaStr=areas.length===0?'':areas.length===1?areas[0]
     :areas.slice(0,-1).join(isJa?'・':', ')+(isJa?'と':' and ')+areas[areas.length-1];
-
   const paras=[];
 
-  // P1: Opening
   let open;
-  if(isRepair)      open=isJa?'このピアノは修理のご相談をお勧めします。':'This piano requires repair consultation.';
-  else if(isFollow) open=isJa?'このピアノの状態は経過観察が推奨されます。':'This piano requires follow-up inspection to monitor its condition.';
-  else if(isMaint)  open=isJa?'このピアノは演奏可能な状態ですが、メンテナンスをお勧めします。':'This piano is in playable condition, but maintenance is recommended.';
+  if(isRepair)       open=isJa?'このピアノは修理のご相談をお勧めします。':'This piano requires repair consultation.';
+  else if(isFollow)  open=isJa?'このピアノの状態は経過観察が推奨されます。':'This piano requires follow-up inspection to monitor its condition.';
+  else if(isMaint)   open=isJa?'このピアノは演奏可能な状態ですが、メンテナンスをお勧めします。':'This piano is in playable condition, but maintenance is recommended.';
   else if(isPlayable)open=isJa?'このピアノは演奏可能な状態です。':'This piano is in playable condition.';
   else               open=isJa?'今回の診断で以下の所見が確認されました。':'The following findings were noted during the inspection.';
   if(areaStr) open+=(isJa?`${areaStr}に改善の余地があります。`:` There is room for improvement in ${areaStr}.`);
   paras.push(open);
 
-  // P2: Tone
-  if(any(tone)){
-    const j=joinEmbeds(tone);
-    paras.push(isJa
-      ?`音色には${j}が見られます。整音やハンマー整形により、より均一で落ち着いた音色が期待できます。`
-      :`The tone shows ${j}. Voicing and hammer shaping may help create a more even and mellow sound.`);
-  }
-  // P3: Touch
-  if(any(touch)){
-    const j=joinEmbeds(touch);
-    paras.push((isJa?'また、':'')+(isJa
-      ?`タッチには${j}が感じられます。アクション調整により、より均一で弾きやすいタッチが期待できます。`
-      :`The touch shows ${j}. Action regulation may help create a more even and responsive feel.`));
-  }
-  // P4: Tuning
-  if(any(tun)){
-    const j=joinEmbeds(tun);
-    paras.push((isJa&&(any(tone)||any(touch))?'また、':'')+(isJa
-      ?`調律面では${j}が見られます。継続してこの傾向が確認される場合は、チューニングピンや弦周りの詳細点検をお勧めします。`
-      :`The piano shows ${j}. If this continues, a detailed inspection of the tuning pins and strings is recommended.`));
-  }
-  // P5: Pedals
-  if(any(ped)){
-    const j=joinEmbeds(ped);
-    paras.push((isJa&&anyIssue?'また、':'')+(isJa
-      ?`ペダルには${j}が確認されました。ペダル整備をお勧めします。`
-      :`The pedals show ${j}. Pedal service is recommended.`));
-  }
-  // Closing
-  if(anyIssue||isMaint||isRepair){
-    paras.push(isJa
-      ?'定期的なメンテナンスにより、より快適な演奏状態を保つことができます。'
-      :'Regular maintenance will help keep the piano in a more comfortable playing condition.');
-  }
+  if(any(tone)){const j=joinEmbeds(tone);paras.push(isJa?`音色には${j}が見られます。整音やハンマー整形により、より均一で落ち着いた音色が期待できます。`:`The tone shows ${j}. Voicing and hammer shaping may help create a more even and mellow sound.`);}
+  if(any(touch)){const j=joinEmbeds(touch);paras.push((isJa?'また、':'')+( isJa?`タッチには${j}が感じられます。アクション調整により、より均一で弾きやすいタッチが期待できます。`:`The touch shows ${j}. Action regulation may help create a more even and responsive feel.`));}
+  if(any(tun)){const j=joinEmbeds(tun);paras.push((isJa&&(any(tone)||any(touch))?'また、':'')+(isJa?`調律面では${j}が見られます。継続してこの傾向が確認される場合は、チューニングピンや弦周りの詳細点検をお勧めします。`:`The piano shows ${j}. If this continues, a detailed inspection of the tuning pins and strings is recommended.`));}
+  if(any(ped)){const j=joinEmbeds(ped);paras.push((isJa&&anyIssue?'また、':'')+(isJa?`ペダルには${j}が確認されました。ペダル整備をお勧めします。`:`The pedals show ${j}. Pedal service is recommended.`));}
+  if(anyIssue||isMaint||isRepair) paras.push(isJa?'定期的なメンテナンスにより、より快適な演奏状態を保つことができます。':'Regular maintenance will help keep the piano in a more comfortable playing condition.');
   return paras.join('\n\n');
 }
 
@@ -552,8 +624,7 @@ function render() {
   document.getElementById('h-title').textContent=t('appTitle');
   document.getElementById('h-sub').textContent=t('appSub');
   for(let i=1;i<=5;i++){
-    const el=document.getElementById('ps'+i);
-    el.className='progress-seg'+(i<S.step?' done':i===S.step?' active':'');
+    document.getElementById('ps'+i).className='progress-seg'+(i<S.step?' done':i===S.step?' active':'');
   }
   document.getElementById('progress-label').textContent=`${t('step')} ${S.step} ${t('of')} 5`;
   const fns=[null,renderStep1,renderStep2,renderStep3,renderStep4,renderStep5];
@@ -603,8 +674,7 @@ function renderStep3() {
   <div class="card"><div class="card-title">${t('s3Title')}</div>
   ${cats.map(([key,label],i)=>`${i>0?'<div class="divider"></div>':''}
     <div class="assess-row"><div class="assess-name">${label}</div>
-    <div class="rating-row">${['A','B','C','D'].map(r=>`<button class="rating-btn${S[key]===r?' sel-'+r:''}" onclick="setRating('${key}','${r}')">${t('r'+r)}<small>${t('r'+r+'l')}</small></button>`).join('')}</div>
-    </div>`).join('')}
+    <div class="rating-row">${['A','B','C','D'].map(r=>`<button class="rating-btn${S[key]===r?' sel-'+r:''}" onclick="setRating('${key}','${r}')">${t('r'+r)}<small>${t('r'+r+'l')}</small></button>`).join('')}</div></div>`).join('')}
   </div>`;
 }
 
@@ -626,62 +696,81 @@ function renderStep4() {
 }
 
 function renderStep5() {
-  const status=getOverallStatus(), recs=getRecommendations();
+  const status=getOverallStatus(), summary=generateTechnicianSummary();
   const sc=status?statusClass(status):'s-good';
   const cats=[['touch',t('touch')],['tone',t('tone')],['action',t('action')],['hammers',t('hammers')],['pedals',t('pedals')],['tuningStability',t('tuningStability')]];
   const io=t('improveOpts'),po=t('preserveOpts');
   const impSel=io.filter((_,i)=>S.improve[i]),presSel=po.filter((_,i)=>S.preserve[i]);
-  const summary=generateTechnicianSummary();
+  const suggestedIds=getSuggestedIds();
+  const totalHours=getTotalHours();
 
-  // Findings card
+  // Findings
   const findingsHTML=FINDINGS_DATA.map((catObj,ci)=>`
-    <div class="findings-cat${ci<FINDINGS_DATA.length-1?'':''}" style="${ci>0?'padding-top:14px;margin-top:14px;border-top:1px solid var(--border)':''}">
+    <div class="findings-cat" style="${ci>0?'padding-top:14px;margin-top:14px;border-top:1px solid var(--border)':''}">
       <div class="findings-cat-label">${catObj.icon} ${isJa?catObj.ja:catObj.en}</div>
       <div class="${catObj.single?'cb-grid-1':'cb-grid'}">
         ${catObj.items.map((item,idx)=>{const sel=(S.findings[catObj.cat]||[])[idx];return`<label class="cb-item${sel?' checked':''}" data-finding="${catObj.cat}-${idx}" onclick="toggleFinding('${catObj.cat}',${idx});return false"><input type="checkbox" ${sel?'checked':''}><span>${isJa?item.ja:item.en}</span></label>`}).join('')}
       </div>
     </div>`).join('');
 
+  // Service cards
+  const serviceCardsHTML=SERVICE_MASTER.map(svc=>{
+    const sel=S.selectedServices.includes(svc.id);
+    const sug=suggestedIds.includes(svc.id);
+    return `<div class="svc-card${sel?' selected':sug?' suggested':''}" onclick="toggleService('${svc.id}')">
+      <div class="svc-check">${sel?'✓':''}</div>
+      ${sug&&!sel?`<div class="svc-suggest-badge">◎ ${t('suggested')}</div>`:''}
+      <div class="svc-card-header">
+        <div class="svc-card-name">${svc.icon} ${isJa?svc.name.ja:svc.name.en}</div>
+        <div class="svc-card-hours">${hourStr(svc.hours)}</div>
+      </div>
+      <div class="svc-card-benefit">${isJa?svc.benefit.ja:svc.benefit.en}</div>
+      <div class="svc-card-reason">${isJa?svc.reason.ja:svc.reason.en}</div>
+    </div>`;
+  }).join('');
+
   return `<div class="step-header"><div class="step-num">${t('step')} 5</div><div class="step-title">${t('s5Title')}</div><div class="step-desc">${t('s5Desc')}</div></div>
 
   <!-- Findings -->
   <div class="card">
     <div class="card-title">${t('techFindings')}</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;margin-top:-8px">${t('techFindingsDesc')}</div>
+    <div class="card-sub">${t('techFindingsDesc')}</div>
     ${findingsHTML}
   </div>
 
-  <!-- Auto summary preview -->
+  <!-- Auto summary -->
   <div class="card">
     <div class="card-title">${t('techSummaryTitle')}</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:10px;margin-top:-8px;display:flex;align-items:center;gap:5px">
-      <span style="background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px">AUTO</span>
+    <div class="card-sub" style="display:flex;align-items:center;gap:5px">
+      <span style="background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px">AUTO</span>
       ${t('techSummaryAuto')}
     </div>
     <div class="summary-preview${summary?' active':''}" id="summary-preview">${summary?esc(summary).replace(/\n\n/g,'<br><br>'):`<span class="summary-hint">${t('noFindingsHint')}</span>`}</div>
   </div>
 
-  <!-- Overall condition -->
+  <!-- Service selection — main action -->
+  <div class="card">
+    <div class="card-title">${t('selectServices')}</div>
+    <div class="card-sub">${t('selectServicesDesc')}</div>
+    <div class="service-grid">${serviceCardsHTML}</div>
+    <div class="time-total">
+      <div class="time-total-label">${t('estimatedTime')}</div>
+      <div><span class="time-total-value">${totalHours}</span><span class="time-total-unit">${isJa?t('hours'):' '+t(totalHours===1?'hour':'hours')}</span></div>
+    </div>
+  </div>
+
+  <!-- Supporting: overall + assessment -->
   ${status?`<div class="card"><div class="card-title">${t('overallCondition')}</div>
     <div class="status-card ${sc}"><div class="status-dot">${statusEmoji(status)}</div>
     <div class="status-info"><h2>${statusLabel(status)}</h2><p>${getOverallContextText(status)}</p></div></div>
   </div>`:''}
-
-  <!-- Assessment -->
   <div class="card"><div class="card-title">${t('conditionAssessment')}</div>
     <table class="mini-table">${cats.map(([key,label])=>{const r=S[key];return`<tr><td class="cat">${label}</td><td><span class="rating-pill ${r?'pill-'+r:'pill-none'}">${r||'—'}</span></td></tr>`;}).join('')}</table>
   </div>
-
-  <!-- Customer goals -->
   ${(impSel.length||presSel.length)?`<div class="card"><div class="card-title">${t('customerGoals')}</div>
-    ${impSel.length?`<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">${t('improveSummaryLabel')}</div><div style="font-size:14px;line-height:1.8">${impSel.map(o=>`✓ ${o}`).join('<br>')}</div></div>`:''}
-    ${presSel.length?`<div><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">${t('preserveSummaryLabel')}</div><div style="font-size:14px;line-height:1.8">${presSel.map(o=>`✓ ${o}`).join('<br>')}</div></div>`:''}
+    ${impSel.length?`<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">${t('improveSummaryLabel')}</div><div style="font-size:14px;line-height:1.9">${impSel.map(o=>`✓ ${o}`).join('<br>')}</div></div>`:''}
+    ${presSel.length?`<div><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">${t('preserveSummaryLabel')}</div><div style="font-size:14px;line-height:1.9">${presSel.map(o=>`✓ ${o}`).join('<br>')}</div></div>`:''}
   </div>`:''}
-
-  <!-- Recommendations -->
-  <div class="card"><div class="card-title">${t('recommendations')}</div>
-    ${recs.length?`<div class="rec-list">${recs.map(r=>`<div class="rec-item"><span>${r.icon}</span><span>${tr(r.key)}</span></div>`).join('')}</div>`:`<div class="no-recs">${t('noRecs')}</div>`}
-  </div>
 
   <!-- Tech notes -->
   <div class="card"><div class="card-title">${t('techNotes')}</div>
@@ -696,10 +785,10 @@ function renderNav() {
   else el.innerHTML=`<button class="btn btn-back" onclick="goBack()">${t('back')}</button><button class="btn btn-pdf btn-next" onclick="generatePDF()"><span>${t('pdfIcon')}</span> ${t('generatePDF')}</button>`;
 }
 
-// ── Event handlers ────────────────────────────────────────────────
+// ── Handlers ──────────────────────────────────────────────────────
 function attachListeners() {
   const bind=(id,key)=>{const el=document.getElementById(id);if(el)el.addEventListener('input',e=>{S[key]=e.target.value;save();});};
-  bind('improveComment','improveComment');bind('preserveComment','preserveComment');
+  bind('improveComment','improveComment'); bind('preserveComment','preserveComment');
   ['customerName','manufacturer','model','serialNumber','year','inspectionDate'].forEach(k=>bind('f-'+k,k));
   ['humidity','pitch','downweight'].forEach(k=>bind('f-'+k,k));
   bind('techNotes','techNotes');
@@ -727,7 +816,6 @@ window.setRating=(key,val)=>{
   save();
 };
 window.setQual=(id,val)=>{S[id]=S[id]===val?'':val;render();};
-
 window.toggleFinding=(cat,idx)=>{
   if(!S.findings[cat]) S.findings[cat]=Array(FD[cat].items.length).fill(false);
   S.findings[cat][idx]=!S.findings[cat][idx];
@@ -736,18 +824,34 @@ window.toggleFinding=(cat,idx)=>{
   updateSummaryPreview();
   save();
 };
+window.toggleService=id=>{
+  const idx=S.selectedServices.indexOf(id);
+  if(idx>=0) S.selectedServices.splice(idx,1);
+  else S.selectedServices.push(id);
+  // Update card UI
+  document.querySelectorAll('.svc-card').forEach(el=>{
+    const onclick=el.getAttribute('onclick');
+    if(onclick&&onclick.includes(`'${id}'`)){
+      const sel=S.selectedServices.includes(id);
+      el.classList.toggle('selected',sel);
+      const chk=el.querySelector('.svc-check');
+      if(chk) chk.textContent=sel?'✓':'';
+    }
+  });
+  // Update total
+  const tot=document.querySelector('.time-total-value');
+  if(tot) tot.textContent=getTotalHours();
+  const totUnit=document.querySelector('.time-total-unit');
+  if(totUnit) totUnit.textContent=isJa?t('hours'):' '+t(getTotalHours()===1?'hour':'hours');
+  save();
+};
 
 function updateSummaryPreview() {
   const el=document.getElementById('summary-preview');
   if(!el) return;
   const text=generateTechnicianSummary();
-  if(text){
-    el.innerHTML=esc(text).replace(/\n\n/g,'<br><br>');
-    el.classList.add('active');
-  } else {
-    el.innerHTML=`<span class="summary-hint">${t('noFindingsHint')}</span>`;
-    el.classList.remove('active');
-  }
+  if(text){el.innerHTML=esc(text).replace(/\n\n/g,'<br><br>');el.classList.add('active');}
+  else{el.innerHTML=`<span class="summary-hint">${t('noFindingsHint')}</span>`;el.classList.remove('active');}
 }
 
 function collectStep(){
@@ -759,7 +863,7 @@ function collectStep(){
 function goNext(){collectStep();if(S.step<5){S.step++;render();window.scrollTo(0,0);}}
 function goBack(){collectStep();if(S.step>1){S.step--;render();window.scrollTo(0,0);}}
 
-// ── PDF generation ────────────────────────────────────────────────
+// ── PDF ───────────────────────────────────────────────────────────
 async function generatePDF() {
   collectStep();
   const overlay=document.getElementById('overlay');
@@ -768,7 +872,7 @@ async function generatePDF() {
   try {
     await new Promise(r=>setTimeout(r,60));
     buildPDFTemplate();
-    await new Promise(r=>setTimeout(r,180));
+    await new Promise(r=>setTimeout(r,200));
     const tmpl=document.getElementById('pdf-template');
     const canvas=await html2canvas(tmpl,{scale:2,useCORS:true,logging:false,backgroundColor:'#ffffff',width:820});
     const {jsPDF}=window.jspdf;
@@ -796,12 +900,14 @@ async function generatePDF() {
 }
 
 function buildPDFTemplate() {
-  const status=getOverallStatus()||'good', recs=getRecommendations();
+  const status=getOverallStatus()||'good';
   const io=t('improveOpts'),po=t('preserveOpts');
   const impSel=io.filter((_,i)=>S.improve[i]),presSel=po.filter((_,i)=>S.preserve[i]);
   const cats=[['touch',t('touch')],['tone',t('tone')],['action',t('action')],['hammers',t('hammers')],['pedals',t('pedals')],['tuningStability',t('tuningStability')]];
-  const keyPoints=getKeyFocusPoints(status), nextStep=getNextStepText(recs);
+  const keyPoints=getKeyFocusPoints(status);
   const techSummary=generateTechnicianSummary();
+  const selSvcs=getSelectedServiceObjects();
+  const totalHours=getTotalHours();
 
   const ratingColor={A:'#16a34a',B:'#65a30d',C:'#d97706',D:'#dc2626'};
   const ratingBg   ={A:'#dcfce7',B:'#ecfccb',C:'#fef3c7',D:'#fee2e2'};
@@ -817,7 +923,6 @@ function buildPDFTemplate() {
   const dateStr=S.inspectionDate||new Date().toISOString().split('T')[0];
 
   const sh=(label,color='#1e3a5f')=>`<div style="font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:${color};padding-bottom:6px;margin-bottom:10px;border-bottom:2px solid ${color}">${label}</div>`;
-  const bullet=(txt,col='#1e3a5f')=>`<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:3px"><span style="color:${col};font-weight:900;font-size:11px;line-height:1.5">•</span><span style="font-size:11px;color:#334155;line-height:1.5">${txt}</span></div>`;
   const check=(txt,col='#2563eb')=>`<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:3px"><span style="color:${col};font-size:11px;line-height:1.5">✓</span><span style="font-size:11px;color:#334155;line-height:1.5">${txt}</span></div>`;
 
   const numFields=[
@@ -828,29 +933,34 @@ function buildPDFTemplate() {
   const qualFields=[{key:'keyDip',label:t('keyDip')},{key:'letOff',label:t('letOff')}].filter(f=>S[f.key]);
   const hasMeasure=numFields.length||qualFields.length;
 
-  const recCardsHTML=recs.map(r=>{
-    const {reasons,benefits}=buildRecDetail(r.key);
-    return `<div style="border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 15px;margin-bottom:9px;background:#fafbfc">
-      <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;padding-bottom:7px;border-bottom:1px solid #e2e8f0">
-        <span style="font-size:16px">${r.icon}</span>
-        <span style="font-size:13px;font-weight:900;color:#1e3a5f">${tr(r.key)}</span>
+  // Service cards for PDF
+  const svcCardsHTML = selSvcs.map(svc=>`
+    <div style="border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 15px;margin-bottom:10px;background:#fff">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e2e8f0">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:16px">${svc.icon}</span>
+          <span style="font-size:14px;font-weight:900;color:#1e3a5f">${isJa?svc.name.ja:svc.name.en}</span>
+        </div>
+        <span style="font-size:12px;font-weight:800;color:#fff;background:#2563eb;padding:3px 12px;border-radius:20px">${hourStr(svc.hours)}</span>
       </div>
-      <div style="display:flex;gap:14px">
+      <div style="display:flex;gap:16px">
         <div style="flex:1">
-          <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin-bottom:5px">${t('pdfReason')}</div>
-          ${reasons.map(s=>bullet(s,'#d97706')).join('')}${!reasons.length?`<div style="font-size:11px;color:#94a3b8">—</div>`:''}
+          <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#d97706;margin-bottom:5px">${t('pdfWhyRec')}</div>
+          <div style="font-size:11px;color:#475569;line-height:1.6">${isJa?svc.reason.ja:svc.reason.en}</div>
         </div>
         <div style="flex:1">
-          <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#16a34a;margin-bottom:5px">${t('pdfBenefits')}</div>
-          ${benefits.map(s=>bullet(s,'#16a34a')).join('')}
+          <div style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#16a34a;margin-bottom:5px">${t('pdfExpBenefit')}</div>
+          <div style="font-size:11px;color:#475569;line-height:1.6">${isJa?svc.benefit.ja:svc.benefit.en}</div>
         </div>
       </div>
-    </div>`;
-  }).join('');
+    </div>`).join('');
 
-  // Tech summary paragraphs for PDF
+  // Consolidated benefits list
+  const allBenefits=selSvcs.map(s=>isJa?s.benefit.ja:s.benefit.en);
+
+  // Tech summary HTML
   const summaryParasHTML=techSummary
-    ? techSummary.split('\n\n').map(p=>`<p style="font-size:12px;color:#334155;line-height:1.75;margin-bottom:8px">${esc(p)}</p>`).join('')
+    ? techSummary.split('\n\n').map(p=>`<p style="font-size:12px;color:#334155;line-height:1.75;margin-bottom:7px">${esc(p)}</p>`).join('')
     : '';
 
   document.getElementById('pdf-template').innerHTML=`
@@ -864,32 +974,17 @@ function buildPDFTemplate() {
         ${snYear?`<div style="font-size:11px;opacity:.75;margin-top:2px">${esc(snYear)}</div>`:''}
       </div>
       <div style="text-align:right">
-        ${S.customerName?`<div style="font-size:14px;font-weight:700">${esc(S.customerName)}</div>`:''}
-        <div style="font-size:11px;opacity:.8;margin-top:2px">${dateStr}</div>
+        <div style="font-size:9px;opacity:.7;margin-bottom:2px;letter-spacing:1px;text-transform:uppercase">Overall</div>
+        <div style="font-size:15px;font-weight:900;background:${sc.dot};padding:4px 14px;border-radius:20px">${statusLabel(status)}</div>
+        ${S.customerName?`<div style="font-size:13px;font-weight:700;margin-top:6px">${esc(S.customerName)}</div>`:''}
+        <div style="font-size:11px;opacity:.8;margin-top:1px">${dateStr}</div>
       </div>
     </div>
 
-    <!-- 1. OVERALL CONDITION -->
-    <div style="border:2px solid ${sc.border};background:${sc.bg};border-radius:12px;padding:16px 20px;margin-bottom:14px">
-      <div style="font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:${sc.text};opacity:.7;margin-bottom:8px">${t('pdfSectionOverall')}</div>
-      <div style="display:flex;align-items:flex-start;gap:18px">
-        <div style="width:56px;height:56px;background:${sc.dot};border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff;flex-shrink:0">${statusEmoji(status)}</div>
-        <div style="flex:1">
-          <div style="font-size:21px;font-weight:900;color:${sc.text};margin-bottom:5px">${statusLabel(status)}</div>
-          <div style="font-size:11px;color:${sc.text};line-height:1.6;margin-bottom:${keyPoints.length?'8px':'0'}">${getOverallContextText(status)}</div>
-          ${keyPoints.length?`<div style="margin-bottom:8px">${keyPoints.map(p=>`<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:2px"><span style="font-size:11px;color:${sc.dot}">▶</span><span style="font-size:11px;color:${sc.text};font-weight:600">${p}</span></div>`).join('')}</div>`:''}
-          <div style="background:rgba(255,255,255,0.6);border-radius:8px;padding:7px 12px;display:inline-flex;align-items:center;gap:10px">
-            <span style="font-size:9px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${sc.text};opacity:.7">${t('pdfNextStep')}</span>
-            <span style="font-size:12px;font-weight:800;color:${sc.dot}">${esc(nextStep)}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 2. CUSTOMER GOALS -->
+    <!-- 1. CUSTOMER GOALS -->
     ${(impSel.length||presSel.length||S.improveComment||S.preserveComment)?`
     <div style="border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;background:#f8fafc">
-      ${sh(t('pdfSectionGoals'),'#2563eb')}
+      ${sh(t('pdfGoals'),'#2563eb')}
       <div style="display:flex;gap:22px">
         ${(impSel.length||S.improveComment)?`<div style="flex:1">
           <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">${t('pdfImprove')}</div>
@@ -904,50 +999,75 @@ function buildPDFTemplate() {
       </div>
     </div>`:''}
 
-    <!-- 3. TECHNICIAN SUMMARY -->
+    <!-- 2. TECHNICIAN SUMMARY -->
     ${techSummary?`
     <div style="border:1px solid #dbeafe;border-radius:12px;padding:14px 18px;margin-bottom:14px;background:#f0f7ff">
-      ${sh(t('pdfSectionTechSummary'),'#1d4ed8')}
+      ${sh(t('pdfTechSummary'),'#1d4ed8')}
       ${summaryParasHTML}
     </div>`:''}
 
-    <!-- 4+5. CONDITION ASSESSMENT + MEASUREMENTS (two-col) -->
+    <!-- 3. RECOMMENDED SERVICES -->
+    ${selSvcs.length?`
+    <div style="margin-bottom:14px">
+      ${sh(t('pdfServices'),'#1e3a5f')}
+      ${svcCardsHTML}
+    </div>`:''}
+
+    <!-- 4. TOTAL ESTIMATED TIME -->
+    ${selSvcs.length?`
+    <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:12px;padding:16px 22px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;color:#fff">
+      <div>
+        <div style="font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;opacity:.8;margin-bottom:3px">${t('pdfEstTime')}</div>
+        <div style="font-size:12px;opacity:.75">${selSvcs.map(s=>isJa?s.name.ja:s.name.en).join(isJa?'・':', ')}</div>
+      </div>
+      <div style="text-align:right">
+        <span style="font-size:38px;font-weight:900;letter-spacing:-1px">${totalHours}</span>
+        <span style="font-size:16px;font-weight:700;opacity:.8;margin-left:4px">${isJa?t('hours'):t(totalHours===1?'hour':'hours')}</span>
+      </div>
+    </div>`:''}
+
+    <!-- 5. EXPECTED BENEFITS -->
+    ${allBenefits.length?`
+    <div style="border:1px solid #bbf7d0;border-radius:12px;padding:14px 18px;margin-bottom:14px;background:#f0fdf4">
+      ${sh(t('pdfBenefits'),'#15803d')}
+      ${allBenefits.map(b=>`<div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:5px">
+        <span style="color:#16a34a;font-size:13px;font-weight:800;line-height:1.5">✦</span>
+        <span style="font-size:12px;color:#334155;line-height:1.6">${esc(b)}</span>
+      </div>`).join('')}
+    </div>`:''}
+
+    <!-- 6+7. CONDITION ASSESSMENT + MEASUREMENTS (supporting reference) -->
     <div style="display:flex;gap:14px;margin-bottom:14px">
       <div style="flex:1.1;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fafbfc">
-        ${sh(t('pdfSectionAssess'))}
+        ${sh(t('pdfAssessment'),'#64748b')}
         <table style="width:100%;border-collapse:collapse">
           ${cats.map(([key,label])=>{const r=S[key];const bg=r?ratingBg[r]:'#f1f5f9';const col=r?ratingColor[r]:'#94a3b8';return`<tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569">${label}</td><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;text-align:right"><span style="background:${bg};color:${col};font-weight:800;font-size:12px;padding:2px 10px;border-radius:20px">${r||'—'}</span></td></tr>`;}).join('')}
         </table>
       </div>
       ${hasMeasure?`<div style="flex:1;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fafbfc">
-        ${sh(t('pdfSectionMeasure'))}
+        ${sh(t('pdfMeasure'),'#64748b')}
         ${numFields.map(f=>{const st=getMeasurementStatus(f.key,S[f.key]);return`<div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #e2e8f0">
           <div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${f.label}</div>
           <div style="display:flex;align-items:baseline;gap:5px">
-            <span style="font-size:19px;font-weight:900;color:#1e3a5f">${esc(S[f.key])}</span>
+            <span style="font-size:18px;font-weight:900;color:#334155">${esc(S[f.key])}</span>
             <span style="font-size:11px;color:#64748b">${f.unit}</span>
             ${st?`<span style="margin-left:auto;font-size:10px;font-weight:800;color:${st.color};background:${st.color}18;padding:1px 7px;border-radius:10px">${st.label}</span>`:''}
           </div>
           ${st?`<div style="font-size:10px;color:${st.color};margin-top:1px">${st.note}</div>`:''}
         </div>`;}).join('')}
-        ${qualFields.map(f=>`<div style="margin-bottom:8px"><div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${f.label}</div><div style="font-size:13px;font-weight:700;color:#1e3a5f">${t(S[f.key])}</div></div>`).join('')}
+        ${qualFields.map(f=>`<div style="margin-bottom:8px"><div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${f.label}</div><div style="font-size:13px;font-weight:700;color:#334155">${t(S[f.key])}</div></div>`).join('')}
       </div>`:''}
     </div>
 
-    <!-- 6. RECOMMENDED SERVICES -->
-    ${recs.length?`<div style="margin-bottom:14px">${sh(t('pdfSectionRec'))}${recCardsHTML}</div>`:''}
-
-    <!-- 7. TECHNICIAN NOTES -->
-    <div style="margin-bottom:16px">
-      ${sh(t('pdfSectionNotes'))}
-      <div style="min-height:44px;padding:10px 13px;background:#f8fafc;border-radius:9px;border:1px solid #e2e8f0;font-size:12px;color:#475569;line-height:1.7">
-        ${S.techNotes?esc(S.techNotes).replace(/\n/g,'<br>'):`<span style="color:#cbd5e1">${t('pdfNone')}</span>`}
-      </div>
-    </div>
+    <!-- 8. TECHNICIAN NOTES -->
+    ${S.techNotes?`<div style="margin-bottom:14px">
+      ${sh(t('pdfNotes'),'#64748b')}
+      <div style="padding:10px 13px;background:#f8fafc;border-radius:9px;border:1px solid #e2e8f0;font-size:12px;color:#475569;line-height:1.7">${esc(S.techNotes).replace(/\n/g,'<br>')}</div>
+    </div>`:''}
 
     <!-- FOOTER -->
     <div style="border-top:1px solid #e2e8f0;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:9px;color:#94a3b8;max-width:480px">${t('pdfFooter')}</div>
+      <div style="font-size:9px;color:#94a3b8;max-width:520px">${t('pdfFooter')}</div>
       <div style="font-size:9px;color:#94a3b8;white-space:nowrap">🎹 Piano Health Report</div>
     </div>
   </div>`;
@@ -955,7 +1075,6 @@ function buildPDFTemplate() {
 
 // ── Utils ─────────────────────────────────────────────────────────
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-
 render();
 </script>
 </body>
