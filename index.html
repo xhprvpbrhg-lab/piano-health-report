@@ -32,6 +32,7 @@
     }
     .header-top { display:flex; align-items:center; gap:12px; }
     .header-icon { flex-shrink:0; display:flex; align-items:center; }
+    .header-logo-img { height:38px; width:auto; display:block; }
     .header-text h1 {
       font-family:'Poppins',-apple-system,sans-serif;
       font-size:17px; font-weight:700; letter-spacing:-.2px; line-height:1.2;
@@ -208,16 +209,15 @@
 <header class="app-header">
   <div class="header-top">
     <div class="header-icon">
-      <!-- Piano Service Planner logo mark: 3 keys + tuning fork + green check -->
-      <svg width="44" height="36" viewBox="0 0 44 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- 3 piano black keys -->
+      <img src="logo.png" alt="Piano Service Planner" class="header-logo-img"
+           onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex'">
+      <!-- SVG fallback (shown if logo.png not found) -->
+      <svg id="logo-fallback" width="44" height="36" viewBox="0 0 44 36" fill="none" style="display:none">
         <rect x="0"  y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.95)"/>
         <rect x="11" y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.95)"/>
         <rect x="22" y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.95)"/>
-        <!-- Tuning fork -->
         <path d="M33 21 L33 15 Q33 10 36.5 10 Q40 10 40 15 L40 21" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
         <line x1="36.5" y1="21" x2="36.5" y2="29" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
-        <!-- Green checkmark -->
         <path d="M1 27 L8.5 35 L23 19" stroke="#22C55E" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
