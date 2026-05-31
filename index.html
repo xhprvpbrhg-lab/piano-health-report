@@ -103,11 +103,13 @@
     /* ── Checkboxes ── */
     .cb-grid   { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .cb-grid-1 { display:grid; grid-template-columns:1fr; gap:8px; }
-    .cb-item { display:flex; align-items:center; gap:10px; padding:11px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; transition:background .12s,border-color .12s; -webkit-tap-highlight-color:transparent; background:var(--surface); }
+    /* Two-state selectable item (no checkbox): white/normal → green ring + tint */
+    .cb-item { display:flex; align-items:center; gap:10px; padding:11px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; transition:background .12s,border-color .12s,box-shadow .12s; -webkit-tap-highlight-color:transparent; background:var(--surface); }
     .cb-item:hover { border-color:#cbd5e1; }
-    .cb-item.checked { background:#F0F6FF; border-color:var(--navy); }
-    .cb-item input[type=checkbox] { width:18px; height:18px; accent-color:var(--navy); cursor:pointer; flex-shrink:0; }
+    .cb-item.checked { background:#F4FDF7; border-color:var(--green); box-shadow:0 0 0 1px var(--green); }
+    .cb-item input[type=checkbox] { display:none; }
     .cb-item span { font-size:14px; color:var(--text-2); user-select:none; line-height:1.3; }
+    .cb-item.checked span { color:var(--green-700); font-weight:600; }
 
     /* ── Service selection cards (hero) ── */
     .service-grid { display:grid; grid-template-columns:1fr; gap:10px; }
