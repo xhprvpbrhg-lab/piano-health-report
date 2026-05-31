@@ -233,15 +233,17 @@
 
 <header class="app-header">
   <div class="header-top">
-    <!-- Native brand mark: 3 piano keys + tuning fork + green check -->
-    <svg class="brand-mark" width="40" height="34" viewBox="0 0 44 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Piano Service Planner">
-      <rect x="0"  y="0" width="8.5" height="22" rx="2" fill="#fff"/>
-      <rect x="11" y="0" width="8.5" height="22" rx="2" fill="#fff"/>
-      <rect x="22" y="0" width="8.5" height="22" rx="2" fill="#fff"/>
-      <path d="M33 21 L33 15 Q33 10 36.5 10 Q40 10 40 15 L40 21" stroke="rgba(255,255,255,.55)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <line x1="36.5" y1="21" x2="36.5" y2="29" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>
-      <circle cx="36.5" cy="30.5" r="1.6" fill="rgba(255,255,255,.55)"/>
-      <path d="M1 27 L8.5 35 L23 18.5" stroke="#22C55E" stroke-width="3.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Flat brand mark: 3 piano keys + upright tuning fork + green check -->
+    <svg class="brand-mark" width="42" height="36" viewBox="0 0 46 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Piano Service Planner">
+      <!-- piano keys (black keys), flat white -->
+      <rect x="15" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
+      <rect x="24" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
+      <rect x="33" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
+      <!-- tuning fork: two tines up, U-yoke, short stem down -->
+      <path d="M6 6 L6 21 C6 23.5 7.2 24.5 9 24.5 C10.8 24.5 12 23.5 12 21 L12 6" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M9 24.5 L9 32" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+      <!-- green check -->
+      <path d="M16 28 L23 35 L38 19" stroke="#22C55E" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <div class="brand-divider"></div>
     <div class="header-text">
@@ -1047,13 +1049,13 @@ function buildPDFTemplate() {
     <div style="background:linear-gradient(135deg,#1E3A8A,#1d4ed8);border-radius:12px;padding:18px 24px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;color:#fff">
       <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-          <svg width="28" height="23" viewBox="0 0 44 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="0"  y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.9)"/>
-            <rect x="11" y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.9)"/>
-            <rect x="22" y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.9)"/>
-            <path d="M33 21 L33 15 Q33 10 36.5 10 Q40 10 40 15 L40 21" stroke="rgba(255,255,255,0.45)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-            <line x1="36.5" y1="21" x2="36.5" y2="29" stroke="rgba(255,255,255,0.45)" stroke-width="2" stroke-linecap="round"/>
-            <path d="M1 27 L8.5 35 L23 19" stroke="#22C55E" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <svg width="29" height="25" viewBox="0 0 46 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="15" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
+            <rect x="24" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
+            <rect x="33" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
+            <path d="M6 6 L6 21 C6 23.5 7.2 24.5 9 24.5 C10.8 24.5 12 23.5 12 21 L12 6" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M9 24.5 L9 32" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+            <path d="M16 28 L23 35 L38 19" stroke="#22C55E" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span style="font-size:15px;font-weight:800;letter-spacing:-.2px">${t('pdfHeaderSub')}</span>
         </div>
@@ -1156,7 +1158,7 @@ function buildPDFTemplate() {
     <div style="border-top:1px solid #e2e8f0;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:9px;color:#94a3b8;max-width:520px">${t('pdfFooter')}</div>
       <div style="font-size:9px;color:#94a3b8;white-space:nowrap;display:flex;align-items:center;gap:4px">
-        <svg width="14" height="11" viewBox="0 0 44 36" fill="none"><rect x="0" y="0" width="8.5" height="22" rx="1.5" fill="#94a3b8"/><rect x="11" y="0" width="8.5" height="22" rx="1.5" fill="#94a3b8"/><rect x="22" y="0" width="8.5" height="22" rx="1.5" fill="#94a3b8"/><path d="M1 27 L8.5 35 L23 19" stroke="#22C55E" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="16" height="14" viewBox="0 0 46 40" fill="none"><rect x="15" y="2" width="7" height="17" rx="1.8" fill="#94a3b8"/><rect x="24" y="2" width="7" height="17" rx="1.8" fill="#94a3b8"/><rect x="33" y="2" width="7" height="17" rx="1.8" fill="#94a3b8"/><path d="M6 6 L6 21 C6 23.5 7.2 24.5 9 24.5 C10.8 24.5 12 23.5 12 21 L12 6" stroke="#94a3b8" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 24.5 L9 32" stroke="#94a3b8" stroke-width="2.6" fill="none" stroke-linecap="round"/><path d="M16 28 L23 35 L38 19" stroke="#22C55E" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Piano Service Planner
       </div>
     </div>
