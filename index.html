@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Piano Health Report</title>
+  <title>Piano Service Planner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --primary: #1e3a5f; --primary-mid: #2563eb; --primary-light: #3b82f6;
-      --bg: #f0f4f8; --card: #fff; --text: #1a202c; --muted: #64748b; --border: #e2e8f0;
+      --primary: #1E3A8A; --primary-mid: #1d4ed8; --primary-light: #3b82f6;
+      --accent: #22C55E; --accent-dark: #16a34a;
+      --bg: #f0f4f8; --card: #fff; --text: #1a202c; --muted: #6B7280; --border: #e2e8f0;
       --radius: 14px;
       --A: #16a34a; --A-bg: #dcfce7; --A-border: #86efac;
       --B: #65a30d; --B-bg: #ecfccb; --B-border: #bef264;
@@ -24,14 +26,17 @@
 
     /* ── Header ── */
     .app-header {
-      background: linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff;
+      background: linear-gradient(135deg,#1E3A8A 0%,#1d4ed8 100%); color:#fff;
       padding:14px 20px 10px; position:sticky; top:0; z-index:200;
-      box-shadow:0 2px 12px rgba(30,58,95,.35);
+      box-shadow:0 2px 16px rgba(30,58,138,.4);
     }
-    .header-top { display:flex; align-items:center; gap:10px; }
-    .header-icon { font-size:22px; line-height:1; }
-    .header-text h1 { font-size:17px; font-weight:800; letter-spacing:-.3px; }
-    .header-text p  { font-size:11px; opacity:.75; margin-top:1px; }
+    .header-top { display:flex; align-items:center; gap:12px; }
+    .header-icon { flex-shrink:0; display:flex; align-items:center; }
+    .header-text h1 {
+      font-family:'Poppins',-apple-system,sans-serif;
+      font-size:17px; font-weight:700; letter-spacing:-.2px; line-height:1.2;
+    }
+    .header-text p  { font-size:11px; opacity:.72; margin-top:1px; letter-spacing:.1px; }
     .progress-wrap { margin-top:10px; display:flex; gap:5px; align-items:center; }
     .progress-seg { flex:1; height:3px; border-radius:2px; background:rgba(255,255,255,.25); transition:background .3s; }
     .progress-seg.done   { background:rgba(255,255,255,.65); }
@@ -42,12 +47,12 @@
     .main { max-width:820px; margin:0 auto; padding:20px 16px 4px; }
     .step-header { margin-bottom:20px; }
     .step-num   { font-size:11px; font-weight:700; color:var(--primary-light); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
-    .step-title { font-size:24px; font-weight:800; color:var(--text); line-height:1.2; }
+    .step-title { font-family:'Poppins',-apple-system,sans-serif; font-size:24px; font-weight:700; color:var(--text); line-height:1.2; }
     .step-desc  { font-size:14px; color:var(--muted); margin-top:4px; }
 
     /* ── Cards ── */
     .card { background:var(--card); border-radius:var(--radius); padding:20px; margin-bottom:14px; box-shadow:0 1px 4px rgba(0,0,0,.07),0 0 0 1px rgba(0,0,0,.04); }
-    .card-title { font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--primary-mid); margin-bottom:14px; padding-bottom:10px; border-bottom:1.5px solid var(--border); }
+    .card-title { font-family:'Poppins',-apple-system,sans-serif; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--primary-mid); margin-bottom:14px; padding-bottom:10px; border-bottom:1.5px solid var(--border); }
     .card-sub { font-size:12px; color:var(--muted); margin-top:-8px; margin-bottom:14px; }
 
     /* ── Checkboxes ── */
@@ -76,9 +81,10 @@
       border-color:#bfdbfe; background:#f8fbff;
     }
     .svc-card-header { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:8px; }
-    .svc-card-name { font-size:15px; font-weight:800; color:var(--text); line-height:1.2; }
+    .svc-card-name { font-family:'Poppins',-apple-system,sans-serif; font-size:15px; font-weight:700; color:var(--text); line-height:1.2; }
     .svc-card-hours {
-      font-size:13px; font-weight:800; color:var(--primary-mid);
+      font-family:'Poppins',-apple-system,sans-serif;
+      font-size:13px; font-weight:700; color:var(--primary-mid);
       background:#dbeafe; padding:2px 9px; border-radius:20px; white-space:nowrap; flex-shrink:0;
     }
     .svc-card.selected .svc-card-hours { background:var(--primary-mid); color:#fff; }
@@ -100,14 +106,14 @@
 
     /* ── Time total ── */
     .time-total {
-      background:linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff;
+      background:linear-gradient(135deg,#1E3A8A,#1d4ed8); color:#fff;
       border-radius:12px; padding:16px 20px;
       display:flex; align-items:center; justify-content:space-between;
       margin-top:12px;
     }
-    .time-total-label { font-size:13px; font-weight:700; opacity:.85; }
-    .time-total-value { font-size:28px; font-weight:900; letter-spacing:-.5px; }
-    .time-total-unit  { font-size:14px; font-weight:600; opacity:.8; margin-left:4px; }
+    .time-total-label { font-family:'Poppins',-apple-system,sans-serif; font-size:13px; font-weight:600; opacity:.85; }
+    .time-total-value { font-family:'Poppins',-apple-system,sans-serif; font-size:30px; font-weight:800; letter-spacing:-.5px; }
+    .time-total-unit  { font-family:'Poppins',-apple-system,sans-serif; font-size:14px; font-weight:600; opacity:.8; margin-left:4px; }
 
     /* ── Technician summary ── */
     .summary-preview {
@@ -182,7 +188,7 @@
     .btn:active { transform:scale(.97); }
     .btn-back { background:var(--border); color:var(--muted); flex:.5; }
     .btn-next { background:var(--primary); color:#fff; }
-    .btn-pdf  { flex:1.4; background:linear-gradient(135deg,#1e3a5f,#2563eb); color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .btn-pdf  { flex:1.4; background:linear-gradient(135deg,#1E3A8A,#1d4ed8); color:#fff; display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Poppins',-apple-system,sans-serif; }
 
     /* ── Overlay ── */
     .overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:1000; color:#fff; }
@@ -201,10 +207,23 @@
 
 <header class="app-header">
   <div class="header-top">
-    <div class="header-icon">🎹</div>
+    <div class="header-icon">
+      <!-- Piano Service Planner logo mark: 3 keys + tuning fork + green check -->
+      <svg width="44" height="36" viewBox="0 0 44 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- 3 piano black keys -->
+        <rect x="0"  y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.95)"/>
+        <rect x="11" y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.95)"/>
+        <rect x="22" y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.95)"/>
+        <!-- Tuning fork -->
+        <path d="M33 21 L33 15 Q33 10 36.5 10 Q40 10 40 15 L40 21" stroke="rgba(255,255,255,0.5)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <line x1="36.5" y1="21" x2="36.5" y2="29" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/>
+        <!-- Green checkmark -->
+        <path d="M1 27 L8.5 35 L23 19" stroke="#22C55E" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
     <div class="header-text">
-      <h1 id="h-title">Piano Health Report</h1>
-      <p id="h-sub">Professional Report Tool for Piano Technicians</p>
+      <h1 id="h-title">Piano Service Planner</h1>
+      <p id="h-sub">Professional Piano Service Planning</p>
     </div>
   </div>
   <div class="progress-wrap">
@@ -236,7 +255,7 @@ const isJa = lang === 'ja';
 // ── i18n ──────────────────────────────────────────────────────────
 const T = {
   en: {
-    appTitle:'Piano Health Report', appSub:'Professional Report Tool for Piano Technicians',
+    appTitle:'Piano Service Planner', appSub:'Professional Piano Service Planning',
     step:'Step', of:'of',
     // Step 1
     s1Title:'Customer Goals', s1Desc:'Record what the customer wants to improve and preserve',
@@ -282,7 +301,7 @@ const T = {
     back:'Back', next:'Next →', generatePDF:'Generate PDF', pdfIcon:'📄',
     improveSummaryLabel:'To Improve', preserveSummaryLabel:'To Preserve',
     // PDF
-    pdfHeaderSub:'Piano Health Report',
+    pdfHeaderSub:'Piano Service Planner',
     pdfGoals:'CUSTOMER GOALS',
     pdfTechSummary:'TECHNICIAN SUMMARY',
     pdfServices:'RECOMMENDED SERVICES',
@@ -311,7 +330,7 @@ const T = {
     nextStepMaintain:'Continue regular maintenance',
   },
   ja: {
-    appTitle:'ピアノ健康診断レポート', appSub:'ピアノ技術者向け診断レポート作成ツール',
+    appTitle:'Piano Service Planner', appSub:'プロの調律師が、ピアノの悩みを確かな計画に変えるツール。',
     step:'ステップ', of:'/',
     s1Title:'お客様のご要望', s1Desc:'お客様が改善・維持したい点を記録します',
     s1Card:'お客様フィードバック',
@@ -967,9 +986,19 @@ function buildPDFTemplate() {
   <div style="background:#fff;padding:26px 30px;font-family:'Helvetica Neue',Arial,sans-serif;color:#1a202c;width:820px">
 
     <!-- HEADER -->
-    <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:12px;padding:18px 24px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;color:#fff">
+    <div style="background:linear-gradient(135deg,#1E3A8A,#1d4ed8);border-radius:12px;padding:18px 24px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;color:#fff">
       <div>
-        <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;opacity:.75;margin-bottom:3px">🎹 ${t('pdfHeaderSub')}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <svg width="28" height="23" viewBox="0 0 44 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0"  y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.9)"/>
+            <rect x="11" y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.9)"/>
+            <rect x="22" y="0" width="8.5" height="22" rx="1.5" fill="rgba(255,255,255,0.9)"/>
+            <path d="M33 21 L33 15 Q33 10 36.5 10 Q40 10 40 15 L40 21" stroke="rgba(255,255,255,0.45)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="36.5" y1="21" x2="36.5" y2="29" stroke="rgba(255,255,255,0.45)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M1 27 L8.5 35 L23 19" stroke="#22C55E" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span style="font-size:15px;font-weight:800;letter-spacing:-.2px">${t('pdfHeaderSub')}</span>
+        </div>
         <div style="font-size:21px;font-weight:900;letter-spacing:-.5px">${esc(pianoLine)}</div>
         ${snYear?`<div style="font-size:11px;opacity:.75;margin-top:2px">${esc(snYear)}</div>`:''}
       </div>
@@ -1015,7 +1044,7 @@ function buildPDFTemplate() {
 
     <!-- 4. TOTAL ESTIMATED TIME -->
     ${selSvcs.length?`
-    <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:12px;padding:16px 22px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;color:#fff">
+    <div style="background:linear-gradient(135deg,#1E3A8A,#1d4ed8);border-radius:12px;padding:16px 22px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;color:#fff">
       <div>
         <div style="font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;opacity:.8;margin-bottom:3px">${t('pdfEstTime')}</div>
         <div style="font-size:12px;opacity:.75">${selSvcs.map(s=>isJa?s.name.ja:s.name.en).join(isJa?'・':', ')}</div>
@@ -1068,7 +1097,10 @@ function buildPDFTemplate() {
     <!-- FOOTER -->
     <div style="border-top:1px solid #e2e8f0;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
       <div style="font-size:9px;color:#94a3b8;max-width:520px">${t('pdfFooter')}</div>
-      <div style="font-size:9px;color:#94a3b8;white-space:nowrap">🎹 Piano Health Report</div>
+      <div style="font-size:9px;color:#94a3b8;white-space:nowrap;display:flex;align-items:center;gap:4px">
+        <svg width="14" height="11" viewBox="0 0 44 36" fill="none"><rect x="0" y="0" width="8.5" height="22" rx="1.5" fill="#94a3b8"/><rect x="11" y="0" width="8.5" height="22" rx="1.5" fill="#94a3b8"/><rect x="22" y="0" width="8.5" height="22" rx="1.5" fill="#94a3b8"/><path d="M1 27 L8.5 35 L23 19" stroke="#22C55E" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Piano Service Planner
+      </div>
     </div>
   </div>`;
 }
