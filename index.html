@@ -603,6 +603,15 @@ function getTotalHours() {
 function getSuggestedIds() {
   return SERVICE_MASTER.filter(s => s.suggestWhen(S)).map(s => s.id);
 }
+function getSelectedBenefits() {
+  return getSelectedServiceObjects().map(s => isJa ? s.benefit.ja : s.benefit.en);
+}
+// Expected-benefits list HTML (used in Step 5 + live-updated by toggleService)
+function benefitsListHTML() {
+  const b = getSelectedBenefits();
+  if (!b.length) return `<div class="summary-hint">${isJa?'サービスを選択すると、期待できる改善がここに表示されます。':'Select services to see expected benefits here.'}</div>`;
+  return b.map(x => `<div style="display:flex;align-items:flex-start;gap:9px;padding:4px 0"><span style="color:var(--green);font-weight:800;font-size:13px;line-height:1.5">✦</span><span style="font-size:14px;color:var(--text-2);line-height:1.5">${esc(x)}</span></div>`).join('');
+}
 
 function getMeasurementStatus(field, value) {
   const v=parseFloat(value); if(isNaN(v)||value==='') return null;
@@ -771,26 +780,39 @@ function renderStep5() {
     </div>`;
   }).join('');
 
+  // Measured values (supporting display)
+  const numFields=[
+    {key:'humidity',label:t('humidity'),unit:'%'},
+    {key:'pitch',label:t('pitch'),unit:'Hz'},
+    {key:'downweight',label:t('downweight'),unit:'g'},
+  ].filter(f=>S[f.key]);
+  const qualFields=[{key:'keyDip',label:t('keyDip')},{key:'letOff',label:t('letOff')}].filter(f=>S[f.key]);
+  const hasMeasure=numFields.length||qualFields.length;
+
   return `<div class="step-header"><div class="step-num">${t('step')} 5</div><div class="step-title">${t('s5Title')}</div><div class="step-desc">${t('s5Desc')}</div></div>
 
-  <!-- Findings -->
+  <!-- 1. Customer Goals (context) -->
+  ${(impSel.length||presSel.length)?`<div class="card"><div class="card-title">${t('customerGoals')}</div>
+    ${impSel.length?`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">${t('improveSummaryLabel')}</div><div style="font-size:14px;line-height:1.9;color:var(--text-2)">${impSel.map(o=>`<span style="color:var(--navy)">✓</span> ${o}`).join('<br>')}</div></div>`:''}
+    ${presSel.length?`<div><div style="font-size:11px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:7px">${t('preserveSummaryLabel')}</div><div style="font-size:14px;line-height:1.9;color:var(--text-2)">${presSel.map(o=>`<span style="color:var(--green)">✓</span> ${o}`).join('<br>')}</div></div>`:''}
+  </div>`:''}
+
+  <!-- 2. Technician findings (input) + auto summary -->
   <div class="card">
     <div class="card-title">${t('techFindings')}</div>
     <div class="card-sub">${t('techFindingsDesc')}</div>
     ${findingsHTML}
   </div>
-
-  <!-- Auto summary -->
   <div class="card">
     <div class="card-title">${t('techSummaryTitle')}</div>
-    <div class="card-sub" style="display:flex;align-items:center;gap:5px">
-      <span style="background:#dbeafe;color:#1d4ed8;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px">AUTO</span>
+    <div class="card-sub" style="display:flex;align-items:center;gap:6px;margin-bottom:14px">
+      <span style="background:#EFF4FF;color:var(--navy);font-size:10px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:6px">AUTO</span>
       ${t('techSummaryAuto')}
     </div>
     <div class="summary-preview${summary?' active':''}" id="summary-preview">${summary?esc(summary).replace(/\n\n/g,'<br><br>'):`<span class="summary-hint">${t('noFindingsHint')}</span>`}</div>
   </div>
 
-  <!-- Service selection — main action -->
+  <!-- 3 + 4. Recommended services (main action) + total time -->
   <div class="card">
     <div class="card-title">${t('selectServices')}</div>
     <div class="card-sub">${t('selectServicesDesc')}</div>
@@ -801,7 +823,13 @@ function renderStep5() {
     </div>
   </div>
 
-  <!-- Supporting: overall + assessment -->
+  <!-- 5. Expected benefits -->
+  <div class="card">
+    <div class="card-title">${t('pdfBenefits')}</div>
+    <div id="benefits-preview">${benefitsListHTML()}</div>
+  </div>
+
+  <!-- 6. Condition assessment (supporting reference) -->
   ${status?`<div class="card"><div class="card-title">${t('overallCondition')}</div>
     <div class="status-card ${sc}"><div class="status-dot">${statusEmoji(status)}</div>
     <div class="status-info"><h2>${statusLabel(status)}</h2><p>${getOverallContextText(status)}</p></div></div>
@@ -809,12 +837,16 @@ function renderStep5() {
   <div class="card"><div class="card-title">${t('conditionAssessment')}</div>
     <table class="mini-table">${cats.map(([key,label])=>{const r=S[key];return`<tr><td class="cat">${label}</td><td><span class="rating-pill ${r?'pill-'+r:'pill-none'}">${r||'—'}</span></td></tr>`;}).join('')}</table>
   </div>
-  ${(impSel.length||presSel.length)?`<div class="card"><div class="card-title">${t('customerGoals')}</div>
-    ${impSel.length?`<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">${t('improveSummaryLabel')}</div><div style="font-size:14px;line-height:1.9">${impSel.map(o=>`✓ ${o}`).join('<br>')}</div></div>`:''}
-    ${presSel.length?`<div><div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px">${t('preserveSummaryLabel')}</div><div style="font-size:14px;line-height:1.9">${presSel.map(o=>`✓ ${o}`).join('<br>')}</div></div>`:''}
+
+  <!-- 7. Measured values (supporting reference) -->
+  ${hasMeasure?`<div class="card"><div class="card-title">${t('s4Title')}</div>
+    <table class="mini-table">
+      ${numFields.map(f=>{const st=getMeasurementStatus(f.key,S[f.key]);return`<tr><td class="cat">${f.label}</td><td style="text-align:right"><span style="font-family:'Poppins',sans-serif;font-weight:700;color:var(--text-2)">${esc(S[f.key])}<span style="font-size:11px;color:var(--text-3);font-weight:500"> ${f.unit}</span></span>${st?` <span style="font-size:11px;font-weight:700;color:${st.color}">· ${st.label}</span>`:''}</td></tr>`;}).join('')}
+      ${qualFields.map(f=>`<tr><td class="cat">${f.label}</td><td style="text-align:right;font-weight:600;color:var(--text-2)">${t(S[f.key])}</td></tr>`).join('')}
+    </table>
   </div>`:''}
 
-  <!-- Tech notes -->
+  <!-- Technician notes (input) -->
   <div class="card"><div class="card-title">${t('techNotes')}</div>
     <textarea class="form-textarea" id="techNotes" placeholder="${t('notesPlaceholder')}" style="min-height:90px">${esc(S.techNotes)}</textarea>
   </div>`;
@@ -885,6 +917,9 @@ window.toggleService=id=>{
   if(tot) tot.textContent=getTotalHours();
   const totUnit=document.querySelector('.time-total-unit');
   if(totUnit) totUnit.textContent=isJa?t('hours'):' '+t(getTotalHours()===1?'hour':'hours');
+  // Update expected-benefits list live
+  const bp=document.getElementById('benefits-preview');
+  if(bp) bp.innerHTML=benefitsListHTML();
   save();
 };
 
