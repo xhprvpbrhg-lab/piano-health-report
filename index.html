@@ -226,7 +226,75 @@
 
     #pdf-template { position:fixed; left:-9999px; top:0; width:820px; background:#fff; font-family:'Helvetica Neue',Arial,sans-serif; }
 
+    /* ── Live report preview pane (hidden on phones / iPad portrait) ── */
+    .preview-pane { display:none; }
+    .preview-head { display:none; }
+
     @media (max-width:480px) { .cb-grid { grid-template-columns:1fr; } .input-row { grid-template-columns:1fr; } }
+
+    /* ── iPad landscape & desktop: 2-column (form | live preview) ── */
+    @media (min-width:1024px) {
+      body { padding-bottom:0; }
+      .main { max-width:none; margin:0; padding:24px 32px 104px; }
+      .nav-wrap { right:var(--pv-w,420px); }
+      .nav-inner { max-width:none; }
+
+      .preview-pane {
+        display:flex; flex-direction:column;
+        position:fixed; right:0; bottom:0; top:var(--app-header-h,92px);
+        width:var(--pv-w,420px);
+        background:#EEF2F6; border-left:1px solid var(--border); z-index:150;
+      }
+      .preview-head {
+        display:flex; align-items:center; justify-content:space-between;
+        flex:0 0 auto; padding:11px 16px; background:#fff; border-bottom:1px solid var(--border);
+        font-family:'Poppins',sans-serif; font-size:11px; font-weight:600;
+        color:var(--text-3); text-transform:uppercase; letter-spacing:.7px;
+      }
+      .preview-dl {
+        font-family:'Poppins',sans-serif; font-size:11px; font-weight:600; letter-spacing:.2px;
+        text-transform:none; color:#fff; background:var(--green); border:none; cursor:pointer;
+        padding:6px 12px; border-radius:8px; display:inline-flex; align-items:center; gap:5px;
+      }
+      .preview-dl:hover { background:var(--green-700); }
+      .preview-body { flex:1; overflow-y:auto; padding:18px; -webkit-overflow-scrolling:touch; }
+    }
+    @media (min-width:1024px) and (max-width:1140px) {
+      :root { --pv-w:368px; }
+    }
+
+    /* ── Preview document (the mini report shown in the right pane) ── */
+    .pv-doc { background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; box-shadow:0 1px 3px rgba(15,23,42,.06); }
+    .pv-head { background:var(--navy); color:#fff; padding:14px 16px; }
+    .pv-head-top { font-size:8.5px; letter-spacing:1.4px; text-transform:uppercase; opacity:.6; margin-bottom:4px; }
+    .pv-piano { font-family:'Poppins',sans-serif; font-size:16px; font-weight:700; letter-spacing:-.3px; line-height:1.15; }
+    .pv-meta { display:flex; justify-content:space-between; align-items:flex-end; margin-top:6px; font-size:10.5px; }
+    .pv-meta .pv-cust { font-weight:600; opacity:.95; }
+    .pv-meta .pv-date { opacity:.7; }
+    .pv-status { display:inline-block; margin-top:8px; font-family:'Poppins',sans-serif; font-size:10px; font-weight:700; padding:2px 9px; border-radius:99px; }
+    .pv-body { padding:14px 16px; }
+    .pv-sec { margin-bottom:14px; }
+    .pv-sec:last-child { margin-bottom:0; }
+    .pv-sec-title { font-family:'Poppins',sans-serif; font-size:8.5px; font-weight:700; letter-spacing:.9px; text-transform:uppercase; color:var(--text-3); padding-bottom:5px; margin-bottom:8px; border-bottom:1px solid var(--border-soft); }
+    .pv-goal { font-size:11px; color:var(--text-2); line-height:1.65; }
+    .pv-goal .pv-imp { color:var(--navy); font-weight:700; }
+    .pv-goal .pv-pre { color:var(--green-700); font-weight:700; }
+    .pv-summary { font-size:11px; color:var(--text-2); line-height:1.65; white-space:pre-wrap; }
+    .pv-svc { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid var(--border-soft); }
+    .pv-svc:last-of-type { border-bottom:none; }
+    .pv-svc-name { font-size:11.5px; font-weight:600; color:var(--text); }
+    .pv-svc-h { font-family:'Poppins',sans-serif; font-size:11px; font-weight:700; color:var(--navy); background:#EFF4FF; padding:2px 8px; border-radius:99px; white-space:nowrap; }
+    .pv-total { display:flex; align-items:center; justify-content:space-between; background:var(--navy); color:#fff; border-radius:8px; padding:9px 14px; margin-top:8px; }
+    .pv-total-l { font-family:'Poppins',sans-serif; font-size:9px; font-weight:600; letter-spacing:.6px; text-transform:uppercase; opacity:.78; }
+    .pv-total-v { font-family:'Poppins',sans-serif; font-size:20px; font-weight:700; letter-spacing:-.5px; }
+    .pv-total-v small { font-size:11px; font-weight:600; opacity:.8; margin-left:3px; }
+    .pv-benefit { display:flex; gap:7px; align-items:flex-start; font-size:11px; color:var(--text-2); line-height:1.5; margin-bottom:4px; }
+    .pv-benefit .pv-star { color:var(--green); font-weight:800; }
+    .pv-row { display:flex; align-items:center; justify-content:space-between; padding:5px 0; border-bottom:1px solid var(--border-soft); font-size:11px; }
+    .pv-row:last-child { border-bottom:none; }
+    .pv-row .pv-cat { color:var(--text-3); }
+    .pv-pill { font-family:'Poppins',sans-serif; font-size:10.5px; font-weight:700; padding:1px 9px; border-radius:99px; }
+    .pv-empty { font-size:11px; color:var(--gray-soft); font-style:italic; padding:2px 0; }
   </style>
 </head>
 <body>
@@ -262,6 +330,17 @@
 </header>
 
 <main class="main" id="main-content"></main>
+
+<aside class="preview-pane" id="preview-pane">
+  <div class="preview-head">
+    <span id="preview-head-label">Report Preview</span>
+    <button class="preview-dl" onclick="generatePDF()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <span id="preview-dl-label">PDF</span>
+    </button>
+  </div>
+  <div class="preview-body"><div id="live-preview"></div></div>
+</aside>
 
 <div class="nav-wrap"><div class="nav-inner" id="nav-inner"></div></div>
 
@@ -570,6 +649,7 @@ try {
 
 function save() {
   try { localStorage.setItem('pianoHealthReport', JSON.stringify(S)); } catch(e) {}
+  if (typeof updateLivePreview === 'function') updateLivePreview();
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -1167,7 +1247,98 @@ function buildPDFTemplate() {
 
 // ── Utils ─────────────────────────────────────────────────────────
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── Live report preview (iPad landscape 2-column right pane) ───────
+function buildPreviewHTML() {
+  const status=getOverallStatus();
+  const io=t('improveOpts'),po=t('preserveOpts');
+  const impSel=io.filter((_,i)=>S.improve[i]), presSel=po.filter((_,i)=>S.preserve[i]);
+  const summary=generateTechnicianSummary();
+  const selSvcs=getSelectedServiceObjects();
+  const totalHours=getTotalHours();
+  const benefits=getSelectedBenefits();
+  const cats=[['touch',t('touch')],['tone',t('tone')],['action',t('action')],['hammers',t('hammers')],['pedals',t('pedals')],['tuningStability',t('tuningStability')]];
+  const pianoLine=[S.manufacturer,S.model].filter(Boolean).join(' ') || (isJa?'（ピアノ情報 未入力）':'(piano details pending)');
+  const dateStr=S.inspectionDate||'';
+  const numFields=[{key:'humidity',label:t('humidity'),unit:'%'},{key:'pitch',label:t('pitch'),unit:'Hz'},{key:'downweight',label:t('downweight'),unit:'g'}].filter(f=>S[f.key]);
+  const qualFields=[{key:'keyDip',label:t('keyDip')},{key:'letOff',label:t('letOff')}].filter(f=>S[f.key]);
+  const hasRatings=cats.some(([k])=>S[k]);
+  const hasMeasure=numFields.length||qualFields.length;
+
+  const rpill={A:'background:var(--A-bg);color:var(--A)',B:'background:var(--B-bg);color:var(--B)',C:'background:var(--C-bg);color:var(--C)',D:'background:var(--D-bg);color:var(--D)'};
+  const stColors={excellent:'background:#dcfce7;color:#15803d',good:'background:#ecfccb;color:#4d7c0f',fair:'background:#fef3c7;color:#b45309',attention:'background:#fee2e2;color:#b91c1c'};
+
+  let h='<div class="pv-doc">';
+  // Header
+  h+=`<div class="pv-head">
+    <div class="pv-head-top">${t('pdfHeaderSub')}</div>
+    <div class="pv-piano">${esc(pianoLine)}</div>
+    <div class="pv-meta"><span class="pv-cust">${esc(S.customerName||'')}</span><span class="pv-date">${esc(dateStr)}</span></div>
+    ${status?`<div class="pv-status" style="${stColors[status]}">${statusLabel(status)}</div>`:''}
+  </div>`;
+  h+='<div class="pv-body">';
+  // 1. Customer goals
+  if(impSel.length||presSel.length){
+    h+=`<div class="pv-sec"><div class="pv-sec-title">${t('pdfGoals')}</div><div class="pv-goal">`;
+    if(impSel.length) h+=impSel.map(o=>`<div><span class="pv-imp">✓</span> ${esc(o)}</div>`).join('');
+    if(presSel.length) h+=presSel.map(o=>`<div><span class="pv-pre">✓</span> ${esc(o)}</div>`).join('');
+    h+='</div></div>';
+  }
+  // 2. Technician summary
+  if(summary){
+    h+=`<div class="pv-sec"><div class="pv-sec-title">${t('pdfTechSummary')}</div><div class="pv-summary">${esc(summary)}</div></div>`;
+  }
+  // 3. Recommended services + 4. total time
+  h+=`<div class="pv-sec"><div class="pv-sec-title">${t('pdfServices')}</div>`;
+  if(selSvcs.length){
+    h+=selSvcs.map(s=>`<div class="pv-svc"><span class="pv-svc-name">${isJa?s.name.ja:s.name.en}</span><span class="pv-svc-h">${hourStr(s.hours)}</span></div>`).join('');
+    h+=`<div class="pv-total"><span class="pv-total-l">${t('estimatedTime')}</span><span class="pv-total-v">${totalHours}<small>${isJa?t('hours'):' '+t(totalHours===1?'hour':'hours')}</small></span></div>`;
+  } else {
+    h+=`<div class="pv-empty">${isJa?'サービス未選択':'No services selected'}</div>`;
+  }
+  h+='</div>';
+  // 5. Expected benefits
+  if(benefits.length){
+    h+=`<div class="pv-sec"><div class="pv-sec-title">${t('pdfBenefits')}</div>`;
+    h+=benefits.map(b=>`<div class="pv-benefit"><span class="pv-star">✦</span><span>${esc(b)}</span></div>`).join('');
+    h+='</div>';
+  }
+  // 6. Condition assessment
+  if(hasRatings){
+    h+=`<div class="pv-sec"><div class="pv-sec-title">${t('pdfAssessment')}</div>`;
+    h+=cats.filter(([k])=>S[k]).map(([k,label])=>`<div class="pv-row"><span class="pv-cat">${label}</span><span class="pv-pill" style="${rpill[S[k]]}">${S[k]}</span></div>`).join('');
+    h+='</div>';
+  }
+  // 7. Measured values
+  if(hasMeasure){
+    h+=`<div class="pv-sec"><div class="pv-sec-title">${t('pdfMeasure')}</div>`;
+    h+=numFields.map(f=>{const st=getMeasurementStatus(f.key,S[f.key]);return`<div class="pv-row"><span class="pv-cat">${f.label}</span><span style="font-weight:600;color:var(--text-2)">${esc(S[f.key])} ${f.unit}${st?` · <span style="color:${st.color};font-weight:700">${st.label}</span>`:''}</span></div>`;}).join('');
+    h+=qualFields.map(f=>`<div class="pv-row"><span class="pv-cat">${f.label}</span><span style="font-weight:600;color:var(--text-2)">${t(S[f.key])}</span></div>`).join('');
+    h+='</div>';
+  }
+  h+='</div></div>';
+  return h;
+}
+
+function updateLivePreview() {
+  const el=document.getElementById('live-preview');
+  if(!el) return;
+  el.innerHTML=buildPreviewHTML();
+  const lbl=document.getElementById('preview-head-label');
+  if(lbl) lbl.textContent=isJa?'レポートプレビュー':'Report Preview';
+}
+
+// Keep the fixed preview pane aligned just below the sticky header
+function syncHeaderHeight() {
+  const hdr=document.querySelector('.app-header');
+  if(hdr) document.documentElement.style.setProperty('--app-header-h', hdr.offsetHeight+'px');
+}
+window.addEventListener('resize', syncHeaderHeight);
+window.addEventListener('orientationchange', ()=>setTimeout(syncHeaderHeight,200));
+
 render();
+syncHeaderHeight();
+updateLivePreview();
 </script>
 </body>
 </html>
