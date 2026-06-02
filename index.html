@@ -1148,7 +1148,7 @@ function buildPDFTemplate() {
       <div style="text-align:right">
         <div style="font-size:9px;opacity:.7;margin-bottom:2px;letter-spacing:1px;text-transform:uppercase">Overall</div>
         <div style="font-size:15px;font-weight:900;background:${sc.dot};padding:4px 14px;border-radius:20px">${statusLabel(status)}</div>
-        ${S.customerName?`<div style="font-size:13px;font-weight:700;margin-top:6px">${esc(S.customerName)}</div>`:''}
+        ${S.customerName?`<div style="font-size:13px;font-weight:700;margin-top:6px">${esc(displayName(S.customerName))}</div>`:''}
         <div style="font-size:11px;opacity:.8;margin-top:1px">${dateStr}</div>
       </div>
     </div>
@@ -1250,6 +1250,8 @@ function buildPDFTemplate() {
 
 // ── Utils ─────────────────────────────────────────────────────────
 function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+// Customer display name with honorific (display only — raw customerName is stored unchanged)
+function displayName(name){const n=(name||'').trim();if(!n)return'';return isJa?(n+'様'):('Mr./Ms. '+n);}
 
 // ── Live report preview (iPad landscape 2-column right pane) ───────
 function buildPreviewHTML() {
@@ -1276,7 +1278,7 @@ function buildPreviewHTML() {
   h+=`<div class="pv-head">
     <div class="pv-head-top">${t('pdfHeaderSub')}</div>
     <div class="pv-piano">${esc(pianoLine)}</div>
-    <div class="pv-meta"><span class="pv-cust">${esc(S.customerName||'')}</span><span class="pv-date">${esc(dateStr)}</span></div>
+    <div class="pv-meta"><span class="pv-cust">${esc(displayName(S.customerName))}</span><span class="pv-date">${esc(dateStr)}</span></div>
     ${status?`<div class="pv-status" style="${stColors[status]}">${statusLabel(status)}</div>`:''}
   </div>`;
   h+='<div class="pv-body">';
