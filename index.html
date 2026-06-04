@@ -316,28 +316,124 @@
     .pv-row .pv-cat { color:var(--text-3); }
     .pv-pill { font-family:'Poppins',sans-serif; font-size:10.5px; font-weight:700; padding:1px 9px; border-radius:99px; }
     .pv-empty { font-size:11px; color:var(--gray-soft); font-style:italic; padding:2px 0; }
+
+    /* ── Header actions (Save / History) ── */
+    .header-top { justify-content:space-between; }
+    .brand-group { display:flex; align-items:center; gap:12px; min-width:0; }
+    .header-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+    .save-status { font-size:11px; font-weight:600; color:rgba(255,255,255,.7); white-space:nowrap; opacity:0; transition:opacity .25s; }
+    .save-status.show { opacity:1; }
+    .hdr-btn {
+      display:inline-flex; align-items:center; gap:6px;
+      font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600;
+      color:#fff; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18);
+      padding:7px 13px; border-radius:9px; cursor:pointer; white-space:nowrap;
+      transition:background .15s; -webkit-tap-highlight-color:transparent;
+    }
+    .hdr-btn:hover { background:rgba(255,255,255,.22); }
+    .hdr-btn.primary { background:var(--green); border-color:var(--green); }
+    .hdr-btn.primary:hover { background:var(--green-700); }
+    .hdr-btn svg { flex-shrink:0; }
+    @media (max-width:560px) {
+      .hdr-btn { padding:7px 10px; font-size:12px; }
+      .hdr-btn .hdr-btn-label { display:none; }
+      .header-text p { display:none; }
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
+      background:var(--navy); color:#fff; font-size:14px; font-weight:600;
+      font-family:'Poppins',sans-serif;
+      padding:11px 20px; border-radius:99px; box-shadow:0 6px 24px rgba(15,23,42,.3);
+      z-index:2000; opacity:0; pointer-events:none; transition:opacity .25s, transform .25s;
+      display:flex; align-items:center; gap:8px;
+    }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    .toast .toast-check { color:#6EE7A8; }
+
+    /* ── Reports list overlay ── */
+    .reports-overlay {
+      position:fixed; inset:0; background:rgba(15,23,42,.5); z-index:1500;
+      display:none; align-items:flex-start; justify-content:center; padding:5vh 16px;
+      -webkit-overflow-scrolling:touch;
+    }
+    .reports-overlay.open { display:flex; }
+    .reports-panel {
+      background:var(--bg); width:100%; max-width:640px; max-height:90vh;
+      border-radius:16px; overflow:hidden; display:flex; flex-direction:column;
+      box-shadow:0 20px 60px rgba(15,23,42,.35);
+    }
+    .reports-head {
+      flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+      padding:16px 18px; background:#fff; border-bottom:1px solid var(--border);
+    }
+    .reports-title { font-family:'Poppins',sans-serif; font-size:16px; font-weight:700; color:var(--text); }
+    .reports-head-actions { display:flex; align-items:center; gap:8px; }
+    .rp-new {
+      font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:600; color:#fff;
+      background:var(--navy); border:none; padding:8px 13px; border-radius:9px; cursor:pointer;
+    }
+    .rp-new:hover { background:var(--navy-700); }
+    .rp-close { background:none; border:none; cursor:pointer; color:var(--text-3); padding:6px; display:flex; border-radius:8px; }
+    .rp-close:hover { background:var(--border-soft); }
+    .reports-body { flex:1; overflow-y:auto; padding:14px 16px 18px; }
+    .report-card {
+      background:#fff; border:1px solid var(--border); border-radius:12px;
+      padding:14px 16px; margin-bottom:10px; transition:border-color .15s, box-shadow .15s;
+    }
+    .report-card:hover { border-color:#cbd5e1; box-shadow:0 2px 10px rgba(15,23,42,.06); }
+    .report-card.current { border-color:var(--navy); box-shadow:0 0 0 1px var(--navy); }
+    .rc-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+    .rc-name { font-family:'Poppins',sans-serif; font-size:15.5px; font-weight:700; color:var(--text); line-height:1.2; }
+    .rc-piano { font-size:13px; color:var(--text-2); margin-top:3px; }
+    .rc-meta { font-size:11.5px; color:var(--text-3); margin-top:6px; line-height:1.5; }
+    .rc-status { font-family:'Poppins',sans-serif; font-size:11px; font-weight:700; padding:3px 10px; border-radius:99px; white-space:nowrap; flex-shrink:0; }
+    .rc-svc { display:inline-block; font-size:12px; font-weight:600; color:var(--navy); background:#EFF4FF; padding:2px 9px; border-radius:99px; margin-top:8px; }
+    .rc-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+    .rc-btn {
+      font-family:'Poppins',sans-serif; font-size:12px; font-weight:600; cursor:pointer;
+      padding:8px 13px; border-radius:8px; border:1px solid var(--border); background:#fff; color:var(--text-2);
+      -webkit-tap-highlight-color:transparent; transition:all .12s;
+    }
+    .rc-btn:hover { border-color:#cbd5e1; }
+    .rc-btn.open { background:var(--navy); border-color:var(--navy); color:#fff; }
+    .rc-btn.open:hover { background:var(--navy-700); }
+    .rc-btn.del { color:var(--D); border-color:#F3C9C5; }
+    .rc-btn.del:hover { background:#FEF2F1; }
+    .reports-empty { text-align:center; color:var(--text-3); font-size:14px; padding:40px 16px; }
   </style>
 </head>
 <body>
 
 <header class="app-header">
   <div class="header-top">
-    <!-- Flat brand mark: 3 piano keys + upright tuning fork + green check -->
-    <svg class="brand-mark" width="42" height="36" viewBox="0 0 46 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Piano Service Planner">
-      <!-- piano keys (black keys), flat white -->
-      <rect x="15" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
-      <rect x="24" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
-      <rect x="33" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
-      <!-- tuning fork: two tines up, U-yoke, short stem down -->
-      <path d="M6 6 L6 21 C6 23.5 7.2 24.5 9 24.5 C10.8 24.5 12 23.5 12 21 L12 6" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M9 24.5 L9 32" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
-      <!-- green check -->
-      <path d="M16 28 L23 35 L38 19" stroke="#22C55E" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <div class="brand-divider"></div>
-    <div class="header-text">
-      <h1 id="h-title">Piano Service Planner</h1>
-      <p id="h-sub">Professional Piano Service Planning</p>
+    <div class="brand-group">
+      <!-- Flat brand mark: 3 piano keys + upright tuning fork + green check -->
+      <svg class="brand-mark" width="42" height="36" viewBox="0 0 46 40" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Piano Service Planner">
+        <rect x="15" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
+        <rect x="24" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
+        <rect x="33" y="2" width="7" height="17" rx="1.8" fill="#fff"/>
+        <path d="M6 6 L6 21 C6 23.5 7.2 24.5 9 24.5 C10.8 24.5 12 23.5 12 21 L12 6" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 24.5 L9 32" stroke="#fff" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <path d="M16 28 L23 35 L38 19" stroke="#22C55E" stroke-width="3.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="brand-divider"></div>
+      <div class="header-text">
+        <h1 id="h-title">Piano Service Planner</h1>
+        <p id="h-sub">Professional Piano Service Planning</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <span class="save-status" id="save-status"></span>
+      <button class="hdr-btn primary" id="btn-save" onclick="saveCurrent(true)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span class="hdr-btn-label" id="btn-save-label">Save</span>
+      </button>
+      <button class="hdr-btn" id="btn-history" onclick="openReports()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+        <span class="hdr-btn-label" id="btn-history-label">History</span>
+      </button>
     </div>
   </div>
   <nav class="tab-nav" id="tab-nav"></nav>
@@ -365,6 +461,25 @@
 
 <div id="pdf-template"></div>
 
+<!-- Toast notification -->
+<div class="toast" id="toast"><span class="toast-check" id="toast-icon">✓</span><span id="toast-msg"></span></div>
+
+<!-- Saved reports overlay -->
+<div class="reports-overlay" id="reports-overlay" onclick="if(event.target===this)closeReports()">
+  <div class="reports-panel">
+    <div class="reports-head">
+      <span class="reports-title" id="reports-title">Saved Reports</span>
+      <div class="reports-head-actions">
+        <button class="rp-new" id="rp-new-btn" onclick="newReport()">＋ New</button>
+        <button class="rp-close" onclick="closeReports()" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="reports-body" id="reports-body"></div>
+  </div>
+</div>
+
 <script>
 // ── Language ──────────────────────────────────────────────────────
 const lang = (navigator.language || 'en').startsWith('ja') ? 'ja' : 'en';
@@ -381,6 +496,13 @@ const T = {
     descServicePlan:'Build the recommended service proposal',
     descReport:'Review the proposal and export the report',
     reportReady:'Review the assembled report below, then export it as a PDF.',
+    save:'Save', saved:'Saved', autoSaved:'Auto-saved',
+    history:'History', savedReports:'Saved Reports', newReport:'New Report',
+    noReports:'No saved reports yet.', openEdit:'Open', duplicate:'Duplicate as New',
+    deleteLabel:'Delete', confirmDelete:'Delete this report?', close:'Close',
+    createdLabel:'Created', updatedLabel:'Updated', svcCountLabel:'services',
+    reportLoaded:'Report loaded', duplicated:'Duplicated', newStarted:'New report started',
+    untitledCustomer:'(No name)', untitledPiano:'(No piano)',
     step:'Step', of:'of',
     // Step 1
     s1Title:'Customer Goals', s1Desc:'Record what the customer wants to improve and preserve',
@@ -463,6 +585,13 @@ const T = {
     descServicePlan:'推奨サービスの提案を作成します',
     descReport:'提案内容を確認してPDFを作成します',
     reportReady:'下のレポート内容を確認し、PDFとして出力してください。',
+    save:'保存', saved:'保存しました', autoSaved:'自動保存済み',
+    history:'履歴', savedReports:'保存済みレポート', newReport:'新規作成',
+    noReports:'保存済みレポートはありません。', openEdit:'開く', duplicate:'複製して新規作成',
+    deleteLabel:'削除', confirmDelete:'このレポートを削除しますか？', close:'閉じる',
+    createdLabel:'作成', updatedLabel:'更新', svcCountLabel:'件',
+    reportLoaded:'レポートを読み込みました', duplicated:'複製しました', newStarted:'新規レポートを開始しました',
+    untitledCustomer:'（名称未設定）', untitledPiano:'（ピアノ未設定）',
     step:'ステップ', of:'/',
     s1Title:'お客様のご要望', s1Desc:'お客様が改善・維持したい点を記録します',
     s1Card:'お客様フィードバック',
@@ -650,6 +779,7 @@ const defaultFindings = () => ({
 });
 const defaultState = () => ({
   step:1,
+  reportId:null, // id of the saved report being edited (null = unsaved draft)
   improve:Array(6).fill(false), improveComment:'',
   preserve:Array(4).fill(false), preserveComment:'',
   customerName:'', manufacturer:'', model:'', serialNumber:'', year:'',
@@ -678,6 +808,7 @@ try {
 function save() {
   try { localStorage.setItem('pianoHealthReport', JSON.stringify(S)); } catch(e) {}
   if (typeof updateLivePreview === 'function') updateLivePreview();
+  if (typeof scheduleAutoSave === 'function') scheduleAutoSave();
 }
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -1341,7 +1472,159 @@ function syncHeaderHeight() {
 window.addEventListener('resize', syncHeaderHeight);
 window.addEventListener('orientationchange', ()=>setTimeout(syncHeaderHeight,200));
 
+// ── Saved reports store (localStorage) ────────────────────────────
+const REPORTS_KEY='psp_reports';
+function loadReports(){ try{const a=JSON.parse(localStorage.getItem(REPORTS_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];} }
+function saveReports(arr){ try{localStorage.setItem(REPORTS_KEY,JSON.stringify(arr));}catch(e){} }
+function nowISO(){ return new Date().toISOString(); }
+function genReportId(){
+  const d=new Date(), p=n=>String(n).padStart(2,'0');
+  return `report_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}_${Math.floor(Math.random()*900+100)}`;
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d=new Date(iso); if(isNaN(d.getTime())) return '—';
+  const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function statusOf(st){
+  const rated=CATS.map(c=>st[c]).filter(Boolean);
+  if(!rated.length) return null;
+  if(rated.includes('D')) return 'attention';
+  if(rated.includes('C')) return 'fair';
+  if(rated.includes('B')) return 'good';
+  return 'excellent';
+}
+function buildSnapshot(){ const s=JSON.parse(JSON.stringify(S)); delete s.step; delete s.reportId; return s; }
+function applySnapshot(st,id){
+  S={...defaultState(), ...JSON.parse(JSON.stringify(st)), step:1, reportId:id||null};
+  if(!S.findings) S.findings=defaultFindings();
+  FINDINGS_DATA.forEach(c=>{ if(!S.findings[c.cat]) S.findings[c.cat]=Array(c.items.length).fill(false); });
+  if(!S.selectedServices) S.selectedServices=[];
+  try{ localStorage.setItem('pianoHealthReport', JSON.stringify(S)); }catch(e){}
+}
+
+// Write the current working state into the reports store (create or update)
+function persistCurrent(){
+  const reports=loadReports();
+  const snap=buildSnapshot(), now=nowISO();
+  let rep = S.reportId ? reports.find(r=>r.id===S.reportId) : null;
+  if(rep){ rep.state=snap; rep.updatedAt=now; }
+  else {
+    const id=genReportId(); S.reportId=id;
+    rep={ id, createdAt:now, updatedAt:now, state:snap };
+    reports.unshift(rep);
+  }
+  saveReports(reports);
+  try{ localStorage.setItem('pianoHealthReport', JSON.stringify(S)); }catch(e){}
+  return rep;
+}
+
+// Manual save (header button)
+window.saveCurrent=manual=>{ persistCurrent(); if(manual) showToast(t('saved')); showSaveStatus(t('saved')); };
+
+// Debounced auto-save (called from save())
+let autoSaveTimer=null;
+function scheduleAutoSave(){
+  if(autoSaveTimer) clearTimeout(autoSaveTimer);
+  autoSaveTimer=setTimeout(()=>{
+    const meaningful = S.reportId || (S.customerName||'').trim() || (S.manufacturer||'').trim() || (S.model||'').trim();
+    if(!meaningful) return;
+    persistCurrent();
+    showSaveStatus(t('autoSaved'));
+  }, 1500);
+}
+
+// ── Toast & save-status ───────────────────────────────────────────
+let toastTimer=null;
+function showToast(msg){
+  const el=document.getElementById('toast'); if(!el) return;
+  document.getElementById('toast-msg').textContent=msg;
+  el.classList.add('show');
+  if(toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),1800);
+}
+let statusTimer=null;
+function showSaveStatus(text){
+  const el=document.getElementById('save-status'); if(!el) return;
+  el.textContent=text; el.classList.add('show');
+  if(statusTimer) clearTimeout(statusTimer);
+  statusTimer=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+// ── Reports list overlay ──────────────────────────────────────────
+window.openReports=()=>{ renderReportsList(); document.getElementById('reports-overlay').classList.add('open'); };
+window.closeReports=()=>{ document.getElementById('reports-overlay').classList.remove('open'); };
+function renderReportsList(){
+  const body=document.getElementById('reports-body');
+  const reports=loadReports().slice().sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+  if(!reports.length){ body.innerHTML=`<div class="reports-empty">${t('noReports')}</div>`; return; }
+  const stColors={excellent:'background:#dcfce7;color:#15803d',good:'background:#ecfccb;color:#4d7c0f',fair:'background:#fef3c7;color:#b45309',attention:'background:#fee2e2;color:#b91c1c'};
+  body.innerHTML=reports.map(r=>{
+    const st=r.state||{};
+    const name=displayName(st.customerName) || t('untitledCustomer');
+    const piano=[st.manufacturer,st.model].filter(Boolean).join(' ') || t('untitledPiano');
+    const status=statusOf(st);
+    const svc=(st.selectedServices||[]).length;
+    const cur=r.id===S.reportId?' current':'';
+    return `<div class="report-card${cur}">
+      <div class="rc-top">
+        <div style="min-width:0">
+          <div class="rc-name">${esc(name)}</div>
+          <div class="rc-piano">${esc(piano)}</div>
+        </div>
+        ${status?`<span class="rc-status" style="${stColors[status]}">${statusLabel(status)}</span>`:''}
+      </div>
+      <div class="rc-svc">${isJa?('推奨サービス '+svc+t('svcCountLabel')):(svc+' '+t('svcCountLabel'))}</div>
+      <div class="rc-meta">${t('createdLabel')}: ${fmtDate(r.createdAt)}　・　${t('updatedLabel')}: ${fmtDate(r.updatedAt)}</div>
+      <div class="rc-actions">
+        <button class="rc-btn open" onclick="loadReport('${r.id}')">${t('openEdit')}</button>
+        <button class="rc-btn" onclick="duplicateReport('${r.id}')">${t('duplicate')}</button>
+        <button class="rc-btn del" onclick="deleteReport('${r.id}')">${t('deleteLabel')}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+window.loadReport=id=>{
+  const r=loadReports().find(x=>x.id===id); if(!r) return;
+  applySnapshot(r.state||{}, id);
+  closeReports(); render(); window.scrollTo(0,0);
+  showToast(t('reportLoaded'));
+};
+window.duplicateReport=id=>{
+  const r=loadReports().find(x=>x.id===id); if(!r) return;
+  const reports=loadReports();
+  const st=JSON.parse(JSON.stringify(r.state||{}));
+  const now=nowISO(), newId=genReportId();
+  reports.unshift({ id:newId, createdAt:now, updatedAt:now, state:st });
+  saveReports(reports);
+  applySnapshot(st, newId);
+  closeReports(); render(); window.scrollTo(0,0);
+  showToast(t('duplicated'));
+};
+window.deleteReport=id=>{
+  if(!confirm(t('confirmDelete'))) return;
+  saveReports(loadReports().filter(x=>x.id!==id));
+  if(S.reportId===id){ S.reportId=null; try{localStorage.setItem('pianoHealthReport',JSON.stringify(S));}catch(e){} }
+  renderReportsList();
+};
+window.newReport=()=>{
+  S=defaultState();
+  try{ localStorage.setItem('pianoHealthReport', JSON.stringify(S)); }catch(e){}
+  closeReports(); render(); window.scrollTo(0,0);
+  showToast(t('newStarted'));
+};
+
+function initSaveUI(){
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('btn-save-label',t('save'));
+  set('btn-history-label',t('history'));
+  set('reports-title',t('savedReports'));
+  const nb=document.getElementById('rp-new-btn'); if(nb) nb.textContent='＋ '+t('newReport');
+}
+
 render();
+initSaveUI();
 syncHeaderHeight();
 updateLivePreview();
 </script>
