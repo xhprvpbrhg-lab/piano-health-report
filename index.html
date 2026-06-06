@@ -402,6 +402,21 @@
     .rc-btn.del { color:var(--D); border-color:#F3C9C5; }
     .rc-btn.del:hover { background:#FEF2F1; }
     .reports-empty { text-align:center; color:var(--text-3); font-size:14px; padding:40px 16px; }
+
+    /* ── Evaluation reasons + evidence ── */
+    .reason-wrap { margin-top:11px; padding-top:11px; border-top:1px dashed var(--border); }
+    .reason-label { font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+    .reason-chips { display:flex; flex-wrap:wrap; gap:6px; }
+    .reason-chip { font-family:inherit; font-size:12.5px; padding:6px 12px; border-radius:99px; border:1px solid var(--border); background:var(--surface); color:var(--text-2); cursor:pointer; -webkit-tap-highlight-color:transparent; transition:background .12s,border-color .12s,color .12s; }
+    .reason-chip:hover { border-color:#cbd5e1; }
+    .reason-chip.sel { background:#EFF4FF; border-color:var(--navy); color:var(--navy); font-weight:600; }
+    .evidence-box { margin-top:11px; background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:11px 13px; }
+    .evidence-head { font-size:10.5px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.3px; margin-bottom:6px; }
+    .evidence-item { display:flex; align-items:flex-start; gap:9px; padding:4px 0; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .evidence-check { width:17px; height:17px; border-radius:5px; border:1.5px solid var(--border); background:#fff; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; color:transparent; margin-top:1px; transition:all .12s; }
+    .evidence-item.on .evidence-check { background:var(--green); border-color:var(--green); color:#fff; }
+    .evidence-item span.ev-text { font-size:12.5px; color:var(--text-2); line-height:1.45; }
+    .evidence-item.off span.ev-text { color:var(--gray-soft); text-decoration:line-through; }
   </style>
 </head>
 <body>
@@ -556,6 +571,8 @@ const T = {
     excellent:'Excellent', good:'Good', fair:'Maintenance Recommended', attention:'Needs Attention',
     rcA:'Excellent', rcB:'Good', rcC:'Needs Improvement', rcD:'Needs Attention',
     tempLow:'Too Low', tempHigh:'Too High', envAdviceTitle:'Environment Advice',
+    reasonsLabel:'Reasons (optional)', evidenceHead:'Evidence shown in the report',
+    pdfReasons:'Reasons',
     back:'Back', next:'Next →', generatePDF:'Generate PDF', pdfIcon:'📄',
     improveSummaryLabel:'To Improve', preserveSummaryLabel:'Things You Like',
     // PDF
@@ -650,6 +667,8 @@ const T = {
     excellent:'優良', good:'良好', fair:'メンテナンス推奨', attention:'要対応',
     rcA:'優良', rcB:'良好', rcC:'改善推奨', rcD:'要対応',
     tempLow:'低すぎ', tempHigh:'高すぎ', envAdviceTitle:'環境改善提案',
+    reasonsLabel:'評価理由（任意）', evidenceHead:'レポートに表示する根拠',
+    pdfReasons:'理由',
     back:'戻る', next:'次へ →', generatePDF:'PDFを作成', pdfIcon:'📄',
     improveSummaryLabel:'改善希望', preserveSummaryLabel:'気に入っている点',
     pdfHeaderSub:'ピアノ健康診断レポート',
@@ -821,6 +840,23 @@ function autoRatingDisplayHTML(key){
     <span style="font-size:10px;color:var(--text-3);margin-left:auto">${autoDriverHint(key)}</span></div>`;
 }
 function updateAutoRatings(){ applyAutoRatings(); AUTO_CATS.forEach(key=>{const el=document.getElementById('auto-rating-'+key); if(el) el.innerHTML=autoRatingDisplayHTML(key);}); }
+
+// Reason chips + evidence selector for a subjective category (shown when rating is C/D)
+function reasonSectionHTML(cat){
+  if(!REASON_MASTER[cat]) return '';
+  if(S[cat]!=='C' && S[cat]!=='D') return '';
+  const sel=(S.assessmentReasons&&S.assessmentReasons[cat])||[];
+  const hidden=(S.hiddenEvidence&&S.hiddenEvidence[cat])||[];
+  const chips=REASON_MASTER[cat].map(r=>`<button class="reason-chip${sel.includes(r.key)?' sel':''}" onclick="toggleReason('${cat}','${r.key}')">${isJa?r.ja:r.en}</button>`).join('');
+  let ev='';
+  if(sel.length){
+    ev=`<div class="evidence-box"><div class="evidence-head">${t('evidenceHead')}</div>`+
+      sel.map(k=>{const r=reasonObj(cat,k); if(!r) return ''; const on=!hidden.includes(k);
+        return `<div class="evidence-item${on?' on':' off'}" onclick="toggleEvidence('${cat}','${k}')"><span class="evidence-check">✓</span><span class="ev-text">${isJa?r.evJa:r.evEn}</span></div>`;}).join('')+
+      `</div>`;
+  }
+  return `<div class="reason-wrap"><div class="reason-label">${t('reasonsLabel')}</div><div class="reason-chips">${chips}</div>${ev}</div>`;
+}
 function envExplanation(st){ return ({
   ideal: isJa?'現在の湿度環境は理想的です。音色、タッチ、調律安定性を維持しやすい状態です。':'The current humidity is ideal — it helps maintain tone, touch, and tuning stability.',
   acceptable: isJa?'現在の湿度環境は許容範囲内です。大きな問題はありませんが、季節変化による変動にはご注意ください。':'The current humidity is acceptable. No major issues, but watch for seasonal fluctuations.',
@@ -859,7 +895,7 @@ const SERVICE_MASTER = [
     benefit:{ en:'Softer, more even tone quality with better dynamic range',
               ja:'より柔らかく均一な音色・ダイナミクス表現の向上' },
     icon:'🎵',
-    suggestWhen: s => (s.hammers==='C'||s.hammers==='D'||s.tone==='C'||s.tone==='D'),
+    suggestWhen: s => (s.hammers==='C'||s.hammers==='D'||s.tone==='C'||s.tone==='D'||reasonSuggests('voicing')),
   },
   {
     id:'hammerShaping',
@@ -870,7 +906,7 @@ const SERVICE_MASTER = [
     benefit:{ en:'Clearer attack and more even tone across registers',
               ja:'発音の明瞭化・音域全体の音色均一化' },
     icon:'🔨',
-    suggestWhen: s => (s.hammers==='C'||s.hammers==='D'),
+    suggestWhen: s => (s.hammers==='C'||s.hammers==='D'||reasonSuggests('hammerShaping')),
   },
   {
     id:'regulation',
@@ -892,7 +928,7 @@ const SERVICE_MASTER = [
     benefit:{ en:'Smooth and reliable pedal operation',
               ja:'ペダル操作の改善・スムーズな動作' },
     icon:'🦶',
-    suggestWhen: s => (s.pedals==='C'||s.pedals==='D'),
+    suggestWhen: s => (s.pedals==='C'||s.pedals==='D'||reasonSuggests('pedalAdjustment')),
   },
   {
     id:'pitchRaise',
@@ -990,6 +1026,47 @@ const FINDINGS_DATA = [
 const FD = {};
 FINDINGS_DATA.forEach(c => { FD[c.cat] = c; });
 
+// ── Evaluation reasons (subjective categories) → evidence + service candidates ──
+// Extensible: add touch/action/tuningStability/environment entries later.
+const REASON_MASTER = {
+  tone: [
+    {key:'bright',  en:'Too bright',      ja:'明るすぎる',         evEn:'The tone is on the bright side',              evJa:'音色がやや明るい傾向です',          svc:['voicing']},
+    {key:'dark',    en:'Too dark',        ja:'暗すぎる',           evEn:'The tone is on the dark side',                evJa:'音色がやや暗い傾向です',            svc:['voicing']},
+    {key:'harsh',   en:'Harsh',           ja:'硬い',               evEn:'Some harshness is present in the tone',       evJa:'音色に硬さが見られます',            svc:['voicing','hammerShaping']},
+    {key:'soft',    en:'Too soft',        ja:'柔らかすぎる',       evEn:'The tone is quite soft',                      evJa:'音色が柔らかすぎる傾向です',        svc:['voicing']},
+    {key:'uneven',  en:'Uneven',          ja:'ばらつきがある',     evEn:'Tone evenness varies across registers',       evJa:'音域によって音色にばらつきがあります', svc:['voicing','hammerShaping']},
+    {key:'nosust',  en:'Lacking sustain', ja:'伸びが不足している', evEn:'Sustain is somewhat lacking',                 evJa:'音の伸びに不足が見られます',        svc:['voicing']},
+    {key:'lowvol',  en:'Lack of volume',  ja:'音量不足',           evEn:'Overall volume is on the low side',           evJa:'音量がやや不足しています',          svc:['voicing']},
+    {key:'loud',    en:'Too loud',        ja:'音量過多',           evEn:'Overall volume is on the high side',          evJa:'音量がやや過多です',                svc:['voicing']},
+  ],
+  hammers: [
+    {key:'grooves', en:'Deep string grooves',      ja:'弦溝が深い',        evEn:'Deep string grooves are visible on the hammers', evJa:'ハンマーに深い弦溝が見られます',   svc:['hammerShaping']},
+    {key:'wear',    en:'Hammer wear',              ja:'摩耗がある',        evEn:'The hammers show wear',                          evJa:'ハンマーに摩耗が見られます',       svc:['hammerShaping','voicing']},
+    {key:'hard',    en:'Hardened hammers',         ja:'硬化している',      evEn:'The hammers have hardened',                      evJa:'ハンマーが硬化しています',         svc:['voicing']},
+    {key:'uneven',  en:'Uneven hammer condition',  ja:'状態にばらつきがある', evEn:'Hammer condition is uneven',                   evJa:'ハンマーの状態にばらつきがあります', svc:['hammerShaping','voicing']},
+    {key:'shaping', en:'Need shaping',             ja:'整形が必要',        evEn:'The hammers would benefit from shaping',         evJa:'ハンマー整形が必要な状態です',     svc:['hammerShaping']},
+    {key:'voicing', en:'Need voicing',             ja:'整音が必要',        evEn:'The hammers would benefit from voicing',         evJa:'整音が必要な状態です',             svc:['voicing']},
+  ],
+  pedals: [
+    {key:'noise',   en:'Noise',              ja:'雑音がある',           evEn:'Pedal noise is present',          evJa:'ペダルに雑音が見られます',           svc:['pedalAdjustment']},
+    {key:'weak',    en:'Weak response',      ja:'効きが弱い',           evEn:'Pedal response is weak',          evJa:'ペダルの効きが弱い状態です',         svc:['pedalAdjustment']},
+    {key:'heavy',   en:'Heavy movement',     ja:'動きが重い',           evEn:'Pedal movement is heavy',         evJa:'ペダルの動きが重い状態です',         svc:['pedalAdjustment']},
+    {key:'adjust',  en:'Adjustment needed',  ja:'調整が必要',           evEn:'Pedal adjustment is needed',      evJa:'ペダルの調整が必要です',             svc:['pedalAdjustment']},
+    {key:'uneven',  en:'Uneven pedal feel',  ja:'踏み心地にばらつきがある', evEn:'Pedal feel is uneven',          evJa:'ペダルの踏み心地にばらつきがあります', svc:['pedalAdjustment']},
+  ],
+};
+const REASON_CATS = ['tone','hammers','pedals'];
+function reasonObj(cat,key){ return (REASON_MASTER[cat]||[]).find(r=>r.key===key); }
+// Evidence the technician chose to show in the report (selected reasons minus hidden)
+function getVisibleEvidence(cat){
+  const sel=(S.assessmentReasons&&S.assessmentReasons[cat])||[], hidden=(S.hiddenEvidence&&S.hiddenEvidence[cat])||[];
+  return sel.filter(k=>!hidden.includes(k)).map(k=>reasonObj(cat,k)).filter(Boolean);
+}
+// Whether any selected reason suggests this service (drives candidate badges)
+function reasonSuggests(svcId){
+  return REASON_CATS.some(cat=>((S.assessmentReasons&&S.assessmentReasons[cat])||[]).some(k=>{const r=reasonObj(cat,k);return r&&r.svc&&r.svc.includes(svcId);}));
+}
+
 // ── State ─────────────────────────────────────────────────────────
 const CATS = ['touch','tone','action','hammers','pedals','tuningStability'];
 const defaultFindings = () => ({
@@ -1007,9 +1084,16 @@ const defaultState = () => ({
   humidity:'', pitch:'', downweight:'', upweight:'', keyDip:'', letOff:'',
   temperature:'', tempUnit:'C',
   findings:defaultFindings(),
+  assessmentReasons:{tone:[],hammers:[],pedals:[]}, // selected evaluation-reason keys
+  hiddenEvidence:{tone:[],hammers:[],pedals:[]},    // reason keys hidden from the report
   selectedServices:[], // array of service IDs chosen by technician
   techNotes:'',
 });
+function ensureReasonState(){
+  if(!S.assessmentReasons) S.assessmentReasons={};
+  if(!S.hiddenEvidence) S.hiddenEvidence={};
+  ['tone','hammers','pedals'].forEach(c=>{ if(!Array.isArray(S.assessmentReasons[c])) S.assessmentReasons[c]=[]; if(!Array.isArray(S.hiddenEvidence[c])) S.hiddenEvidence[c]=[]; });
+}
 
 let S = defaultState();
 try {
@@ -1022,6 +1106,7 @@ try {
     FINDINGS_DATA.forEach(c => {
       if (!S.findings[c.cat]) S.findings[c.cat] = Array(c.items.length).fill(false);
     });
+    ensureReasonState();
   }
 } catch(e) {}
 
@@ -1217,7 +1302,7 @@ function renderStep3() {
     <div class="assess-row"><div class="assess-name">${label}</div>
     ${AUTO_CATS.includes(key)
       ? `<div id="auto-rating-${key}">${autoRatingDisplayHTML(key)}</div>${key==='tuningStability'?`<div id="tuning-risk-note">${tuningRiskNoteHTML()}</div>`:''}`
-      : `<div class="rating-row">${['A','B','C','D'].map(r=>`<button class="rating-btn${S[key]===r?' sel-'+r:''}" onclick="setRating('${key}','${r}')">${t('r'+r)}<small>${t('r'+r+'l')}</small></button>`).join('')}</div>`}
+      : `<div class="rating-row">${['A','B','C','D'].map(r=>`<button class="rating-btn${S[key]===r?' sel-'+r:''}" onclick="setRating('${key}','${r}')">${t('r'+r)}<small>${t('r'+r+'l')}</small></button>`).join('')}</div>${reasonSectionHTML(key)}`}
     </div>`).join('')}
   </div>
   <div class="card"><div class="card-title">${t('envTitle')}</div>
@@ -1398,13 +1483,19 @@ window.togglePreserve=i=>{
   if(items[i]){items[i].classList.toggle('checked',S.preserve[i]);const cb=items[i].querySelector('input');if(cb)cb.checked=S.preserve[i];}
   save();
 };
-window.setRating=(key,val)=>{
-  S[key]=val;
-  const order=['touch','tone','action','hammers','pedals','tuningStability'];
-  const idx=order.indexOf(key);
-  const rows=document.querySelectorAll('.assess-row');
-  if(idx>=0&&rows[idx])rows[idx].querySelectorAll('.rating-btn').forEach((btn,bi)=>{const r=['A','B','C','D'][bi];btn.className='rating-btn'+(val===r?' sel-'+r:'');});
-  save();
+window.setRating=(key,val)=>{ S[key]=(S[key]===val?'':val); render(); };
+window.toggleReason=(cat,key)=>{
+  ensureReasonState();
+  const arr=S.assessmentReasons[cat], i=arr.indexOf(key);
+  if(i>=0){ arr.splice(i,1); const h=S.hiddenEvidence[cat], hi=h.indexOf(key); if(hi>=0) h.splice(hi,1); }
+  else arr.push(key);
+  render();
+};
+window.toggleEvidence=(cat,key)=>{
+  ensureReasonState();
+  const h=S.hiddenEvidence[cat], i=h.indexOf(key);
+  if(i>=0) h.splice(i,1); else h.push(key);
+  render();
 };
 window.setQual=(id,val)=>{S[id]=S[id]===val?'':val;render();};
 window.toggleFinding=(cat,idx)=>{
@@ -1679,7 +1770,7 @@ function buildPDFTemplate() {
       <div style="flex:1.1;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fafbfc">
         ${sh(t('pdfAssessment'),'#64748b')}
         <table style="width:100%;border-collapse:collapse">
-          ${cats.map(([key,label])=>{const r=S[key];const col=ratingTextColor(r);const risk=(key==='tuningStability'&&envTuningRisk())?`<div style="font-size:9.5px;color:#b45309;font-weight:700;margin-top:2px">${t('tuningRiskNote')}</div>`:'';return`<tr><td style="padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569">${label}${risk}</td><td style="padding:7px 0;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top"><span style="font-weight:800;font-size:12.5px;color:${r?col:'#94a3b8'}">${r?ratingCustomerLabel(r):'—'}</span></td></tr>`;}).join('')}
+          ${cats.map(([key,label])=>{const r=S[key];const col=ratingTextColor(r);const risk=(key==='tuningStability'&&envTuningRisk())?`<div style="font-size:9.5px;color:#b45309;font-weight:700;margin-top:2px">${t('tuningRiskNote')}</div>`:'';const evid=getVisibleEvidence(key);const evHTML=evid.length?`<div style="margin-top:4px">${evid.map(e=>`<div style="font-size:10px;color:#64748b;line-height:1.5">・${esc(isJa?e.evJa:e.evEn)}</div>`).join('')}</div>`:'';return`<tr><td style="padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569">${label}${risk}${evHTML}</td><td style="padding:7px 0;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top"><span style="font-weight:800;font-size:12.5px;color:${r?col:'#94a3b8'}">${r?ratingCustomerLabel(r):'—'}</span></td></tr>`;}).join('')}
         </table>
         ${envBlockHTML}
       </div>
@@ -1788,7 +1879,7 @@ function buildPreviewHTML() {
   // 6. Condition assessment
   if(hasRatings){
     h+=`<div class="pv-sec"><div class="pv-sec-title">${t('pdfAssessment')}</div>`;
-    h+=cats.filter(([k])=>S[k]).map(([k,label])=>`<div class="pv-row"><span class="pv-cat">${label}</span><span style="font-weight:700;color:${ratingTextColor(S[k])}">${ratingCustomerLabel(S[k])}</span></div>`).join('');
+    h+=cats.filter(([k])=>S[k]).map(([k,label])=>{const ev=getVisibleEvidence(k);return `<div class="pv-row"><span class="pv-cat">${label}</span><span style="font-weight:700;color:${ratingTextColor(S[k])}">${ratingCustomerLabel(S[k])}</span></div>`+(ev.length?`<div style="font-size:10px;color:var(--text-3);line-height:1.45;padding:0 0 5px 2px">${ev.map(e=>'・'+esc(isJa?e.evJa:e.evEn)).join('<br>')}</div>`:'');}).join('');
     h+='</div>';
   }
   // 7. Measured values
@@ -1871,6 +1962,7 @@ function applySnapshot(st,id){
   if(!S.findings) S.findings=defaultFindings();
   FINDINGS_DATA.forEach(c=>{ if(!S.findings[c.cat]) S.findings[c.cat]=Array(c.items.length).fill(false); });
   if(!S.selectedServices) S.selectedServices=[];
+  ensureReasonState();
   try{ localStorage.setItem('pianoHealthReport', JSON.stringify(S)); }catch(e){}
 }
 
