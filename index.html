@@ -524,6 +524,11 @@ const T = {
     // Step 4
     s4Title:'Measured Values', s4Desc:'Enter measurement data (all optional)',
     humidity:'Humidity (%)', pitch:'Pitch (Hz)', downweight:'Downweight (g)',
+    upweight:'Upweight (g)', touchWeightSection:'Touch Weight Measurement', touchWeight:'Touch Weight',
+    balanceWeight:'Balance Weight', friction:'Friction',
+    twLow:'Low', twStandard:'Standard', twHigh:'High',
+    twBalance:'Balance', twFriction:'Friction', notMeasured:'Not measured',
+    twFormulaNote:'Balance = (DW + UW) / 2 · Friction = (DW − UW) / 2',
     keyDip:'Key Dip', letOff:'Let-off',
     normal:'Normal', shallow:'Shallow', deep:'Deep', wide:'Wide', close:'Close',
     // Step 5
@@ -609,6 +614,11 @@ const T = {
     rA:'A', rAl:'優良', rB:'B', rBl:'良好', rC:'C', rCl:'要整備', rD:'D', rDl:'要修理',
     s4Title:'計測値', s4Desc:'計測データを入力します（すべて任意）',
     humidity:'湿度 (%)', pitch:'ピッチ (Hz)', downweight:'ダウンウェイト (g)',
+    upweight:'アップウェイト (g)', touchWeightSection:'タッチ重量測定', touchWeight:'タッチ重量',
+    balanceWeight:'バランスウェイト', friction:'フリクション',
+    twLow:'低め', twStandard:'標準', twHigh:'高め',
+    twBalance:'バランス', twFriction:'フリクション', notMeasured:'未測定',
+    twFormulaNote:'バランス＝（DW＋UW）÷2 ・ フリクション＝（DW－UW）÷2',
     keyDip:'鍵盤深さ', letOff:'レットオフ',
     normal:'標準', shallow:'浅い', deep:'深い', wide:'広い', close:'狭い',
     s5Title:'所見・サービス提案', s5Desc:'所見を入力し、サービスを選択してレポートを作成します',
@@ -663,6 +673,31 @@ const t = k => T[lang][k] !== undefined ? T[lang][k] : (T.en[k] !== undefined ? 
 
 // ── Service Master ────────────────────────────────────────────────
 // Future: make this editable per technician
+// ── Touch weight (Downweight / Upweight → Balance Weight / Friction) ──
+// Provisional thresholds — tune here later.
+const TOUCH_THRESHOLDS = {
+  balanceWeight: { low: 36, high: 42 }, // g: <low=Low, >high=High, else Standard
+  friction:      { low: 8,  high: 14 },
+};
+function touchStatus(v, th){ return v < th.low ? 'low' : (v > th.high ? 'high' : 'standard'); }
+function touchWeightOf(s){
+  const dwRaw=s.downweight, uwRaw=s.upweight;
+  if(dwRaw==null||uwRaw==null||String(dwRaw).trim()===''||String(uwRaw).trim()==='') return null;
+  const dw=parseFloat(dwRaw), uw=parseFloat(uwRaw);
+  if(isNaN(dw)||isNaN(uw)) return null;
+  const bw=(dw+uw)/2, fr=(dw-uw)/2;
+  return { dw, uw, bw, fr,
+    bwStatus:touchStatus(bw,TOUCH_THRESHOLDS.balanceWeight),
+    frStatus:touchStatus(fr,TOUCH_THRESHOLDS.friction) };
+}
+function getTouchWeight(){ return touchWeightOf(S); }
+function touchWeightHeavy(s){ const tw=touchWeightOf(s); return !!tw && (tw.bwStatus==='high'||tw.frStatus==='high'); }
+function touchFrictionHigh(s){ const tw=touchWeightOf(s); return !!tw && tw.frStatus==='high'; }
+function touchBalanceOff(s){ const tw=touchWeightOf(s); return !!tw && tw.bwStatus!=='standard'; }
+function fmtG(v){ return (Math.round(v*10)/10).toString(); }
+function touchStatusLabel(st){ return st?({low:t('twLow'),standard:t('twStandard'),high:t('twHigh')}[st]):''; }
+function touchStatusColor(st){ return ({low:'#3b82f6',standard:'#16a34a',high:'#d97706'})[st]||'#64748b'; }
+
 const SERVICE_MASTER = [
   {
     id:'voicing',
@@ -695,7 +730,7 @@ const SERVICE_MASTER = [
     benefit:{ en:'Improved playability, consistency, and expressive control',
               ja:'弾きやすさ向上・均一なタッチ・コントロール性改善' },
     icon:'⚙️',
-    suggestWhen: s => (s.touch==='C'||s.touch==='D'||s.action==='C'||s.action==='D'),
+    suggestWhen: s => (s.touch==='C'||s.touch==='D'||s.action==='C'||s.action==='D'||touchWeightHeavy(s)),
   },
   {
     id:'pedalAdjustment',
@@ -729,6 +764,39 @@ const SERVICE_MASTER = [
               ja:'原因特定と適切な改善計画の立案' },
     icon:'🔩',
     suggestWhen: s => (s.tuningStability==='C'||s.tuningStability==='D'),
+  },
+  {
+    id:'frictionReduction',
+    name:  { en:'Friction Reduction',  ja:'フリクション軽減' },
+    hours: 2,
+    reason:{ en:'High friction adds resistance and makes the touch feel heavy',
+             ja:'フリクションが大きく、タッチが重く感じる原因となっている場合' },
+    benefit:{ en:'Lighter, smoother and more responsive key movement',
+              ja:'軽くスムーズで反応の良い鍵盤の動き' },
+    icon:'🪶',
+    suggestWhen: s => touchFrictionHigh(s),
+  },
+  {
+    id:'centerPinService',
+    name:  { en:'Center Pin Service',  ja:'センターピン整備' },
+    hours: 3,
+    reason:{ en:'High friction often originates at tight or worn center pins',
+             ja:'フリクション増大の原因がセンターピンにある場合' },
+    benefit:{ en:'Reduced friction and a more consistent, even touch',
+              ja:'フリクション低減と均一で安定したタッチ' },
+    icon:'📍',
+    suggestWhen: s => touchFrictionHigh(s),
+  },
+  {
+    id:'keyWeightAdjustment',
+    name:  { en:'Key Weight Adjustment', ja:'鍵盤ウェイト調整' },
+    hours: 4,
+    reason:{ en:'Balance weight is outside the comfortable range',
+             ja:'バランスウェイトが適正範囲から外れている場合' },
+    benefit:{ en:'Balanced, even touch weight across the whole keyboard',
+              ja:'全鍵にわたり均一でバランスの取れたタッチ重量' },
+    icon:'⚖️',
+    suggestWhen: s => touchBalanceOff(s),
   },
 ];
 
@@ -785,7 +853,7 @@ const defaultState = () => ({
   customerName:'', manufacturer:'', model:'', serialNumber:'', year:'',
   inspectionDate:new Date().toISOString().split('T')[0],
   touch:'', tone:'', action:'', hammers:'', pedals:'', tuningStability:'',
-  humidity:'', pitch:'', downweight:'', keyDip:'', letOff:'',
+  humidity:'', pitch:'', downweight:'', upweight:'', keyDip:'', letOff:'',
   findings:defaultFindings(),
   selectedServices:[], // array of service IDs chosen by technician
   techNotes:'',
@@ -880,7 +948,9 @@ function generateTechnicianSummary() {
   const ovKeys=ov.map(i=>i.key);
   const any=arr=>arr.length>0;
   const anyIssue=any(tone)||any(touch)||any(tun)||any(ped);
-  if(!any(ov)&&!anyIssue) return '';
+  const tw=touchWeightOf(S);
+  const twHeavy=tw && (tw.bwStatus==='high'||tw.frStatus==='high');
+  if(!any(ov)&&!anyIssue&&!twHeavy) return '';
 
   const isPlayable=ovKeys.includes('playable'), isMaint=ovKeys.includes('maintenance'),
         isFollow=ovKeys.includes('followup'), isRepair=ovKeys.includes('repair');
@@ -905,9 +975,18 @@ function generateTechnicianSummary() {
 
   if(any(tone)){const j=joinEmbeds(tone);paras.push(isJa?`音色には${j}が見られます。整音やハンマー整形により、より均一で落ち着いた音色が期待できます。`:`The tone shows ${j}. Voicing and hammer shaping may help create a more even and mellow sound.`);}
   if(any(touch)){const j=joinEmbeds(touch);paras.push((isJa?'また、':'')+( isJa?`タッチには${j}が感じられます。アクション調整により、より均一で弾きやすいタッチが期待できます。`:`The touch shows ${j}. Action regulation may help create a more even and responsive feel.`));}
+  if(twHeavy){
+    const hi=[];
+    if(tw.bwStatus==='high') hi.push(isJa?'バランスウェイト':'balance weight');
+    if(tw.frStatus==='high') hi.push(isJa?'フリクション':'friction');
+    const hiStr = hi.length===2?(isJa?'バランスウェイトおよびフリクション':'balance weight and friction'):hi[0];
+    paras.push((isJa?'また、':'')+( isJa
+      ? `タッチ重量の測定では、${hiStr}が高めに出ています。タッチが重く感じられる原因として、アクションの抵抗やウェイトバランスが影響している可能性があります。`
+      : `Touch weight measurements indicate higher ${hiStr}. This may contribute to a heavier touch feel and suggests that action resistance or weight balance should be reviewed.`));
+  }
   if(any(tun)){const j=joinEmbeds(tun);paras.push((isJa&&(any(tone)||any(touch))?'また、':'')+(isJa?`調律面では${j}が見られます。継続してこの傾向が確認される場合は、チューニングピンや弦周りの詳細点検をお勧めします。`:`The piano shows ${j}. If this continues, a detailed inspection of the tuning pins and strings is recommended.`));}
   if(any(ped)){const j=joinEmbeds(ped);paras.push((isJa&&anyIssue?'また、':'')+(isJa?`ペダルには${j}が確認されました。ペダル整備をお勧めします。`:`The pedals show ${j}. Pedal service is recommended.`));}
-  if(anyIssue||isMaint||isRepair) paras.push(isJa?'定期的なメンテナンスにより、より快適な演奏状態を保つことができます。':'Regular maintenance will help keep the piano in a more comfortable playing condition.');
+  if(anyIssue||isMaint||isRepair||twHeavy) paras.push(isJa?'定期的なメンテナンスにより、より快適な演奏状態を保つことができます。':'Regular maintenance will help keep the piano in a more comfortable playing condition.');
   return paras.join('\n\n');
 }
 
@@ -983,18 +1062,36 @@ function renderStep3() {
     <div class="rating-row">${['A','B','C','D'].map(r=>`<button class="rating-btn${S[key]===r?' sel-'+r:''}" onclick="setRating('${key}','${r}')">${t('r'+r)}<small>${t('r'+r+'l')}</small></button>`).join('')}</div></div>`).join('')}
   </div>
   <div class="card"><div class="card-title">${t('s4Title')}</div>
-    <div class="input-row-3">
+    <div class="input-row">
       <div class="form-group"><label class="form-label">${t('humidity')}</label><input class="form-input" id="f-humidity" inputmode="numeric" value="${esc(S.humidity)}" placeholder="45"></div>
       <div class="form-group"><label class="form-label">${t('pitch')}</label><input class="form-input" id="f-pitch" inputmode="numeric" value="${esc(S.pitch)}" placeholder="440"></div>
-      <div class="form-group"><label class="form-label">${t('downweight')}</label><input class="form-input" id="f-downweight" inputmode="numeric" value="${esc(S.downweight)}" placeholder="50"></div>
     </div>
     <div class="divider"></div>
     <div class="form-group"><label class="form-label">${t('keyDip')}</label>
       <div class="qual-row">${qb('keyDip','normal',t('normal'))}${qb('keyDip','shallow',t('shallow'))}${qb('keyDip','deep',t('deep'))}</div></div>
     <div class="form-group" style="margin-top:12px"><label class="form-label">${t('letOff')}</label>
       <div class="qual-row">${qb('letOff','normal',t('normal'))}${qb('letOff','wide',t('wide'))}${qb('letOff','close',t('close'))}</div></div>
+  </div>
+  <div class="card"><div class="card-title">${t('touchWeightSection')}</div>
+    <div class="input-row">
+      <div class="form-group"><label class="form-label">${t('downweight')}</label><input class="form-input" id="f-downweight" inputmode="numeric" value="${esc(S.downweight)}" placeholder="58"></div>
+      <div class="form-group"><label class="form-label">${t('upweight')}</label><input class="form-input" id="f-upweight" inputmode="numeric" value="${esc(S.upweight)}" placeholder="28"></div>
+    </div>
+    <div id="touch-weight-result">${touchWeightResultHTML()}</div>
+    <div style="font-size:11px;color:var(--text-3);margin-top:10px;line-height:1.5">${t('twFormulaNote')}</div>
   </div>`;
 }
+function touchWeightResultHTML(){
+  const tw=getTouchWeight();
+  if(!tw) return `<div class="summary-hint" style="margin-top:10px">${t('notMeasured')}</div>`;
+  const chip=(label,val,st)=>`<div style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 13px">
+    <div style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px">${label}</div>
+    <div style="display:flex;align-items:baseline;gap:6px"><span style="font-family:'Poppins',sans-serif;font-size:21px;font-weight:700;color:var(--text)">${fmtG(val)}<span style="font-size:12px;color:var(--text-3);font-weight:500"> g</span></span>
+    <span style="margin-left:auto;font-size:12px;font-weight:700;color:${touchStatusColor(st)}">${touchStatusLabel(st)}</span></div>
+  </div>`;
+  return `<div style="display:flex;gap:10px;margin-top:12px">${chip(t('balanceWeight'),tw.bw,tw.bwStatus)}${chip(t('friction'),tw.fr,tw.frStatus)}</div>`;
+}
+function updateTouchWeight(){ const el=document.getElementById('touch-weight-result'); if(el) el.innerHTML=touchWeightResultHTML(); }
 
 // Step 4 — Service Plan (技術者所見 + 総評 + 推奨サービス + 期待改善 + メモ)
 function renderStep4() {
@@ -1082,7 +1179,9 @@ function attachListeners() {
   const bind=(id,key)=>{const el=document.getElementById(id);if(el)el.addEventListener('input',e=>{S[key]=e.target.value;save();});};
   bind('improveComment','improveComment'); bind('preserveComment','preserveComment');
   ['customerName','manufacturer','model','serialNumber','year','inspectionDate'].forEach(k=>bind('f-'+k,k));
-  ['humidity','pitch','downweight'].forEach(k=>bind('f-'+k,k));
+  ['humidity','pitch','downweight','upweight'].forEach(k=>bind('f-'+k,k));
+  // Live-recompute touch weight (balance / friction) as DW/UW change
+  ['downweight','upweight'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)el.addEventListener('input',updateTouchWeight);});
   bind('techNotes','techNotes');
   updateSummaryPreview();
 }
@@ -1149,7 +1248,7 @@ function updateSummaryPreview() {
 
 function collectStep(){
   if(S.step===2)['customerName','manufacturer','model','serialNumber','year','inspectionDate'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)S[k]=el.value;});
-  if(S.step===3)['humidity','pitch','downweight'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)S[k]=el.value;});
+  if(S.step===3)['humidity','pitch','downweight','upweight'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)S[k]=el.value;});
   if(S.step===4){const el=document.getElementById('techNotes');if(el)S.techNotes=el.value;}
   save();
 }
@@ -1221,10 +1320,20 @@ function buildPDFTemplate() {
   const numFields=[
     {key:'humidity',label:t('humidity').replace(/ \(%\)/,'').replace('（%）',''),unit:'%'},
     {key:'pitch',   label:t('pitch').replace(/ \(Hz\)/,'').replace('（Hz）',''),unit:'Hz'},
-    {key:'downweight',label:t('downweight').replace(/ \(g\)/,'').replace('（g）',''),unit:'g'},
   ].filter(f=>S[f.key]);
   const qualFields=[{key:'keyDip',label:t('keyDip')},{key:'letOff',label:t('letOff')}].filter(f=>S[f.key]);
-  const hasMeasure=numFields.length||qualFields.length;
+  const tw=getTouchWeight();
+  const hasTouch=tw || S.downweight || S.upweight;
+  const hasMeasure=numFields.length||qualFields.length||hasTouch;
+  const twRow=(label,val,extra)=>`<div style="display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;font-size:11px"><span style="color:#64748b">${label}</span><span style="font-weight:700;color:#334155">${val}${extra||''}</span></div>`;
+  const twBlockHTML = hasTouch ? `
+    <div style="margin-top:${numFields.length?'12px':'0'};padding-top:${numFields.length?'10px':'0'};${numFields.length?'border-top:1px solid #e2e8f0;':''}">
+      <div style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">${t('touchWeight')}</div>
+      ${twRow(t('downweight').replace(/ \(g\)/,'').replace('（g）',''), S.downweight?esc(S.downweight)+' g':t('notMeasured'))}
+      ${twRow(t('upweight').replace(/ \(g\)/,'').replace('（g）',''), S.upweight?esc(S.upweight)+' g':t('notMeasured'))}
+      ${tw?twRow(t('balanceWeight'), fmtG(tw.bw)+' g', ` <span style="color:${touchStatusColor(tw.bwStatus)}">/ ${touchStatusLabel(tw.bwStatus)}</span>`):''}
+      ${tw?twRow(t('friction'), fmtG(tw.fr)+' g', ` <span style="color:${touchStatusColor(tw.frStatus)}">/ ${touchStatusLabel(tw.frStatus)}</span>`):''}
+    </div>` : '';
 
   // Service cards for PDF
   const svcCardsHTML = selSvcs.map(svc=>`
@@ -1359,6 +1468,7 @@ function buildPDFTemplate() {
           ${st?`<div style="font-size:10px;color:${st.color};margin-top:1px">${st.note}</div>`:''}
         </div>`;}).join('')}
         ${qualFields.map(f=>`<div style="margin-bottom:8px"><div style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">${f.label}</div><div style="font-size:13px;font-weight:700;color:#334155">${t(S[f.key])}</div></div>`).join('')}
+        ${twBlockHTML}
       </div>`:''}
     </div>
 
@@ -1396,10 +1506,11 @@ function buildPreviewHTML() {
   const cats=[['touch',t('touch')],['tone',t('tone')],['action',t('action')],['hammers',t('hammers')],['pedals',t('pedals')],['tuningStability',t('tuningStability')]];
   const pianoLine=[S.manufacturer,S.model].filter(Boolean).join(' ') || (isJa?'（ピアノ情報 未入力）':'(piano details pending)');
   const dateStr=S.inspectionDate||'';
-  const numFields=[{key:'humidity',label:t('humidity'),unit:'%'},{key:'pitch',label:t('pitch'),unit:'Hz'},{key:'downweight',label:t('downweight'),unit:'g'}].filter(f=>S[f.key]);
+  const numFields=[{key:'humidity',label:t('humidity'),unit:'%'},{key:'pitch',label:t('pitch'),unit:'Hz'}].filter(f=>S[f.key]);
   const qualFields=[{key:'keyDip',label:t('keyDip')},{key:'letOff',label:t('letOff')}].filter(f=>S[f.key]);
+  const tw=getTouchWeight();
   const hasRatings=cats.some(([k])=>S[k]);
-  const hasMeasure=numFields.length||qualFields.length;
+  const hasMeasure=numFields.length||qualFields.length||tw;
 
   const rpill={A:'background:var(--A-bg);color:var(--A)',B:'background:var(--B-bg);color:var(--B)',C:'background:var(--C-bg);color:var(--C)',D:'background:var(--D-bg);color:var(--D)'};
   const stColors={excellent:'background:#dcfce7;color:#15803d',good:'background:#ecfccb;color:#4d7c0f',fair:'background:#fef3c7;color:#b45309',attention:'background:#fee2e2;color:#b91c1c'};
@@ -1450,6 +1561,11 @@ function buildPreviewHTML() {
     h+=`<div class="pv-sec"><div class="pv-sec-title">${t('pdfMeasure')}</div>`;
     h+=numFields.map(f=>{const st=getMeasurementStatus(f.key,S[f.key]);return`<div class="pv-row"><span class="pv-cat">${f.label}</span><span style="font-weight:600;color:var(--text-2)">${esc(S[f.key])} ${f.unit}${st?` · <span style="color:${st.color};font-weight:700">${st.label}</span>`:''}</span></div>`;}).join('');
     h+=qualFields.map(f=>`<div class="pv-row"><span class="pv-cat">${f.label}</span><span style="font-weight:600;color:var(--text-2)">${t(S[f.key])}</span></div>`).join('');
+    if(tw){
+      h+=`<div class="pv-row"><span class="pv-cat">${t('touchWeight')}</span><span style="font-weight:600;color:var(--text-2)">${fmtG(tw.dw)}g down / ${fmtG(tw.uw)}g up</span></div>`;
+      h+=`<div class="pv-row"><span class="pv-cat">${t('twBalance')}</span><span style="font-weight:700;color:${touchStatusColor(tw.bwStatus)}">${touchStatusLabel(tw.bwStatus)}</span></div>`;
+      h+=`<div class="pv-row"><span class="pv-cat">${t('twFriction')}</span><span style="font-weight:700;color:${touchStatusColor(tw.frStatus)}">${touchStatusLabel(tw.frStatus)}</span></div>`;
+    }
     h+='</div>';
   }
   h+='</div></div>';
@@ -1495,7 +1611,13 @@ function statusOf(st){
   if(rated.includes('B')) return 'good';
   return 'excellent';
 }
-function buildSnapshot(){ const s=JSON.parse(JSON.stringify(S)); delete s.step; delete s.reportId; return s; }
+function buildSnapshot(){
+  const s=JSON.parse(JSON.stringify(S)); delete s.step; delete s.reportId;
+  // Include derived touch-weight values for the saved record (recomputed on load from downweight/upweight)
+  const tw=touchWeightOf(S);
+  if(tw){ s.balanceWeight=tw.bw; s.friction=tw.fr; s.balanceWeightStatus=tw.bwStatus; s.frictionStatus=tw.frStatus; }
+  return s;
+}
 function applySnapshot(st,id){
   S={...defaultState(), ...JSON.parse(JSON.stringify(st)), step:1, reportId:id||null};
   if(!S.findings) S.findings=defaultFindings();
