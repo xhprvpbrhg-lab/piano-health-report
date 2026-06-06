@@ -529,6 +529,10 @@ const T = {
     twLow:'Low', twStandard:'Standard', twHigh:'High',
     twBalance:'Balance', twFriction:'Friction', notMeasured:'Not measured',
     twFormulaNote:'Balance = (DW + UW) / 2 · Friction = (DW − UW) / 2',
+    envTitle:'Environment', lblHumidityRH:'Relative Humidity (%)', lblTemperature:'Temperature',
+    lblStatus:'Status', lblRecommendation:'Recommendation', careAdviceTitle:'Care Advice',
+    envIdeal:'Ideal', envAcceptable:'Acceptable', envHigh:'High', envDry:'Dry',
+    tuningRiskNote:'⚠ Environmental fluctuation risk', envHumidityShort:'Humidity',
     keyDip:'Key Dip', letOff:'Let-off',
     normal:'Normal', shallow:'Shallow', deep:'Deep', wide:'Wide', close:'Close',
     // Step 5
@@ -619,6 +623,10 @@ const T = {
     twLow:'低め', twStandard:'標準', twHigh:'高め',
     twBalance:'バランス', twFriction:'フリクション', notMeasured:'未測定',
     twFormulaNote:'バランス＝（DW＋UW）÷2 ・ フリクション＝（DW－UW）÷2',
+    envTitle:'環境（温湿度）', lblHumidityRH:'湿度 (RH %)', lblTemperature:'温度',
+    lblStatus:'状態', lblRecommendation:'アドバイス', careAdviceTitle:'環境管理アドバイス',
+    envIdeal:'理想的', envAcceptable:'許容範囲', envHigh:'高め', envDry:'乾燥',
+    tuningRiskNote:'⚠ 環境要因による変動リスクあり', envHumidityShort:'湿度',
     keyDip:'鍵盤深さ', letOff:'レットオフ',
     normal:'標準', shallow:'浅い', deep:'深い', wide:'広い', close:'狭い',
     s5Title:'所見・サービス提案', s5Desc:'所見を入力し、サービスを選択してレポートを作成します',
@@ -697,6 +705,49 @@ function touchBalanceOff(s){ const tw=touchWeightOf(s); return !!tw && tw.bwStat
 function fmtG(v){ return (Math.round(v*10)/10).toString(); }
 function touchStatusLabel(st){ return st?({low:t('twLow'),standard:t('twStandard'),high:t('twHigh')}[st]):''; }
 function touchStatusColor(st){ return ({low:'#3b82f6',standard:'#16a34a',high:'#d97706'})[st]||'#64748b'; }
+
+// ── Environment (relative humidity → ideal / acceptable / high / dry) ──
+function environmentStatusOf(s){
+  const raw=s.humidity;
+  if(raw==null||String(raw).trim()==='') return null;
+  const h=parseFloat(raw); if(isNaN(h)) return null;
+  if(h<35) return 'dry';
+  if(h>=60) return 'high';
+  if(h>=45 && h<=50) return 'ideal';
+  return 'acceptable'; // 35–45 or 50–60
+}
+function getEnvironment(){ const st=environmentStatusOf(S); return st?{status:st}:null; }
+function envTuningRisk(){ const st=environmentStatusOf(S); return st==='high'||st==='dry'; }
+function envStatusLabel(st){ return st?({ideal:t('envIdeal'),acceptable:t('envAcceptable'),high:t('envHigh'),dry:t('envDry')}[st]):''; }
+function envStatusColor(st){ return ({ideal:'#16a34a',acceptable:'#65a30d',high:'#dc2626',dry:'#2563eb'})[st]||'#64748b'; }
+function envTempDisplay(s){ const tv=(s.temperature==null?'':String(s.temperature).trim()); return tv===''?'':(tv+'°'+(s.tempUnit||'C')); }
+function envExplanation(st){ return ({
+  ideal: isJa?'現在の湿度環境は理想的です。音色、タッチ、調律安定性を維持しやすい状態です。':'The current humidity is ideal — it helps maintain tone, touch, and tuning stability.',
+  acceptable: isJa?'現在の湿度環境は許容範囲内です。大きな問題はありませんが、季節変化による変動にはご注意ください。':'The current humidity is acceptable. No major issues, but watch for seasonal fluctuations.',
+  high: isJa?'湿度が高めです。弦や金属部品の腐食、アクションの動作不良、ピッチ上昇の原因となる可能性があります。':'Humidity is high. It can cause corrosion of strings and metal parts, sluggish action, and rising pitch.',
+  dry: isJa?'乾燥傾向があります。響板収縮や割れ、チューニングピン保持力低下、ピッチ低下の原因となる可能性があります。':'The air is dry. It can cause soundboard shrinkage or cracks, reduced tuning-pin grip, and falling pitch.',
+})[st]||''; }
+function envRecommendationList(st){ return ({
+  ideal: [isJa?'現在の環境を維持してください。':'Maintain the current environment.'],
+  acceptable: [isJa?'定期的な湿度確認を継続してください。':'Continue checking humidity regularly.'],
+  high: isJa?['除湿機の使用','エアコン除湿運転','ピアノ用除湿器の導入検討','湿度計の設置']:['Use a dehumidifier','Run AC in dry mode','Consider a piano dehumidifier','Install a hygrometer'],
+  dry: isJa?['加湿器の使用','ピアノ用加湿器の導入検討','湿度計の設置']:['Use a humidifier','Consider a piano humidifier','Install a hygrometer'],
+})[st]||[]; }
+function envRecommendationShort(st){ return ({
+  ideal: isJa?'現在の環境を維持':'Maintain current environment',
+  acceptable: isJa?'定期的な湿度確認を継続':'Keep checking humidity regularly',
+  high: isJa?'除湿機またはピアノ用除湿器を推奨':'Dehumidifier / piano dehumidifier recommended',
+  dry: isJa?'加湿器またはピアノ用加湿器を推奨':'Humidifier / piano humidifier recommended',
+})[st]||''; }
+function envCareAdvice(){ return isJa?[
+  {h:'24時間の一定管理', d:'人がいない時間帯に空調を停止するなど、温湿度サイクルが大きい環境はピアノに大きなストレスを与えます。可能な限り24時間一定の環境維持を推奨します。'},
+  {h:'湿度計の活用', d:'体感ではなく、ピアノ付近に設置した電子湿度計による管理を推奨します。'},
+  {h:'外装の保護', d:'未使用時に屋根や鍵盤蓋を閉じることで急激な環境変化を緩和できます。'},
+]:[
+  {h:'Keep it stable 24/7', d:'Turning HVAC off while away creates large temperature/humidity swings that stress the piano. Keep the environment as constant as possible around the clock.'},
+  {h:'Use a hygrometer', d:'Manage by an electronic hygrometer placed near the piano rather than by feel.'},
+  {h:'Protect the cabinet', d:'Closing the lid and key cover when not in use softens sudden environmental changes.'},
+]; }
 
 const SERVICE_MASTER = [
   {
@@ -854,6 +905,7 @@ const defaultState = () => ({
   inspectionDate:new Date().toISOString().split('T')[0],
   touch:'', tone:'', action:'', hammers:'', pedals:'', tuningStability:'',
   humidity:'', pitch:'', downweight:'', upweight:'', keyDip:'', letOff:'',
+  temperature:'', tempUnit:'C',
   findings:defaultFindings(),
   selectedServices:[], // array of service IDs chosen by technician
   techNotes:'',
@@ -1059,13 +1111,25 @@ function renderStep3() {
     <div class="card-sub">${t('ratingGuide')}</div>
   ${cats.map(([key,label],i)=>`${i>0?'<div class="divider"></div>':''}
     <div class="assess-row"><div class="assess-name">${label}</div>
-    <div class="rating-row">${['A','B','C','D'].map(r=>`<button class="rating-btn${S[key]===r?' sel-'+r:''}" onclick="setRating('${key}','${r}')">${t('r'+r)}<small>${t('r'+r+'l')}</small></button>`).join('')}</div></div>`).join('')}
+    <div class="rating-row">${['A','B','C','D'].map(r=>`<button class="rating-btn${S[key]===r?' sel-'+r:''}" onclick="setRating('${key}','${r}')">${t('r'+r)}<small>${t('r'+r+'l')}</small></button>`).join('')}</div>${key==='tuningStability'?`<div id="tuning-risk-note">${tuningRiskNoteHTML()}</div>`:''}</div>`).join('')}
+  </div>
+  <div class="card"><div class="card-title">${t('envTitle')}</div>
+    <div class="input-row">
+      <div class="form-group"><label class="form-label">${t('lblHumidityRH')}</label><input class="form-input" id="f-humidity" inputmode="numeric" value="${esc(S.humidity)}" placeholder="45"></div>
+      <div class="form-group"><label class="form-label">${t('lblTemperature')}</label>
+        <div style="display:flex;gap:8px">
+          <input class="form-input" id="f-temperature" inputmode="numeric" value="${esc(S.temperature)}" placeholder="22" style="flex:1;min-width:0">
+          <div class="qual-row" style="flex:0 0 auto;width:96px">
+            <button class="qual-btn${(S.tempUnit||'C')==='C'?' sel':''}" onclick="setTempUnit('C')">°C</button>
+            <button class="qual-btn${S.tempUnit==='F'?' sel':''}" onclick="setTempUnit('F')">°F</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="env-result">${environmentResultHTML()}</div>
   </div>
   <div class="card"><div class="card-title">${t('s4Title')}</div>
-    <div class="input-row">
-      <div class="form-group"><label class="form-label">${t('humidity')}</label><input class="form-input" id="f-humidity" inputmode="numeric" value="${esc(S.humidity)}" placeholder="45"></div>
-      <div class="form-group"><label class="form-label">${t('pitch')}</label><input class="form-input" id="f-pitch" inputmode="numeric" value="${esc(S.pitch)}" placeholder="440"></div>
-    </div>
+    <div class="form-group"><label class="form-label">${t('pitch')}</label><input class="form-input" id="f-pitch" inputmode="numeric" value="${esc(S.pitch)}" placeholder="440"></div>
     <div class="divider"></div>
     <div class="form-group"><label class="form-label">${t('keyDip')}</label>
       <div class="qual-row">${qb('keyDip','normal',t('normal'))}${qb('keyDip','shallow',t('shallow'))}${qb('keyDip','deep',t('deep'))}</div></div>
@@ -1092,6 +1156,30 @@ function touchWeightResultHTML(){
   return `<div style="display:flex;gap:10px;margin-top:12px">${chip(t('balanceWeight'),tw.bw,tw.bwStatus)}${chip(t('friction'),tw.fr,tw.frStatus)}</div>`;
 }
 function updateTouchWeight(){ const el=document.getElementById('touch-weight-result'); if(el) el.innerHTML=touchWeightResultHTML(); }
+function tuningRiskNoteHTML(){
+  if(!envTuningRisk()) return '';
+  return `<div style="margin-top:8px;font-size:12px;font-weight:600;color:#b45309;background:#FFF8EB;border:1px solid #FCE2A6;border-radius:8px;padding:7px 11px">${t('tuningRiskNote')}</div>`;
+}
+function environmentResultHTML(){
+  const st=environmentStatusOf(S);
+  if(!st) return `<div class="summary-hint" style="margin-top:10px">${t('notMeasured')}</div>`;
+  const col=envStatusColor(st);
+  return `<div style="margin-top:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:13px 15px">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+      <span style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0"></span>
+      <span style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.4px">${t('lblStatus')}</span>
+      <span style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;color:${col}">${envStatusLabel(st)}</span>
+    </div>
+    <div style="font-size:13px;color:var(--text-2);line-height:1.65;margin-bottom:9px">${envExplanation(st)}</div>
+    <div style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${t('lblRecommendation')}</div>
+    <div style="font-size:13px;color:${col};font-weight:600;line-height:1.5">${envRecommendationShort(st)}</div>
+  </div>`;
+}
+function updateEnv(){
+  const el=document.getElementById('env-result'); if(el) el.innerHTML=environmentResultHTML();
+  const note=document.getElementById('tuning-risk-note'); if(note) note.innerHTML=tuningRiskNoteHTML();
+}
+window.setTempUnit=u=>{ S.tempUnit=u; render(); };
 
 // Step 4 — Service Plan (技術者所見 + 総評 + 推奨サービス + 期待改善 + メモ)
 function renderStep4() {
@@ -1179,9 +1267,11 @@ function attachListeners() {
   const bind=(id,key)=>{const el=document.getElementById(id);if(el)el.addEventListener('input',e=>{S[key]=e.target.value;save();});};
   bind('improveComment','improveComment'); bind('preserveComment','preserveComment');
   ['customerName','manufacturer','model','serialNumber','year','inspectionDate'].forEach(k=>bind('f-'+k,k));
-  ['humidity','pitch','downweight','upweight'].forEach(k=>bind('f-'+k,k));
+  ['humidity','pitch','downweight','upweight','temperature'].forEach(k=>bind('f-'+k,k));
   // Live-recompute touch weight (balance / friction) as DW/UW change
   ['downweight','upweight'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)el.addEventListener('input',updateTouchWeight);});
+  // Live-recompute environment status as humidity/temperature change
+  ['humidity','temperature'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)el.addEventListener('input',updateEnv);});
   bind('techNotes','techNotes');
   updateSummaryPreview();
 }
@@ -1248,7 +1338,7 @@ function updateSummaryPreview() {
 
 function collectStep(){
   if(S.step===2)['customerName','manufacturer','model','serialNumber','year','inspectionDate'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)S[k]=el.value;});
-  if(S.step===3)['humidity','pitch','downweight','upweight'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)S[k]=el.value;});
+  if(S.step===3)['humidity','pitch','downweight','upweight','temperature'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)S[k]=el.value;});
   if(S.step===4){const el=document.getElementById('techNotes');if(el)S.techNotes=el.value;}
   save();
 }
@@ -1318,13 +1408,31 @@ function buildPDFTemplate() {
   const check=(txt,col='#2563eb')=>`<div style="display:flex;align-items:flex-start;gap:5px;margin-bottom:3px"><span style="color:${col};font-size:11px;line-height:1.5">✓</span><span style="font-size:11px;color:#334155;line-height:1.5">${txt}</span></div>`;
 
   const numFields=[
-    {key:'humidity',label:t('humidity').replace(/ \(%\)/,'').replace('（%）',''),unit:'%'},
     {key:'pitch',   label:t('pitch').replace(/ \(Hz\)/,'').replace('（Hz）',''),unit:'Hz'},
   ].filter(f=>S[f.key]);
   const qualFields=[{key:'keyDip',label:t('keyDip')},{key:'letOff',label:t('letOff')}].filter(f=>S[f.key]);
   const tw=getTouchWeight();
   const hasTouch=tw || S.downweight || S.upweight;
   const hasMeasure=numFields.length||qualFields.length||hasTouch;
+  // Environment block (Condition Assessment) + care advice
+  const envSt=environmentStatusOf(S);
+  const envCol=envSt?envStatusColor(envSt):'#64748b';
+  const envTempStr=envTempDisplay(S);
+  const envBlockHTML = envSt ? `
+    <div style="border:1px solid ${envCol}40;background:${envCol}0c;border-radius:10px;padding:11px 14px;margin-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <span style="font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#64748b">${t('envTitle')}</span>
+        <span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:800;color:${envCol}">${envStatusLabel(envSt)}</span>
+      </div>
+      <div style="font-size:11px;color:#475569;margin-bottom:2px"><b>${t('envHumidityShort')}:</b> ${esc(S.humidity)}%${envTempStr?`　<b>${t('lblTemperature')}:</b> ${esc(envTempStr)}`:''}</div>
+      <div style="font-size:11px;color:#334155;line-height:1.55;margin-top:4px">${envExplanation(envSt)}</div>
+      <div style="font-size:11px;color:${envCol};font-weight:700;line-height:1.5;margin-top:5px">▶ ${envRecommendationList(envSt).join(isJa?'／':' · ')}</div>
+    </div>` : '';
+  const careAdviceHTML = envSt ? `
+    <div style="border:1px solid #e2e8f0;border-radius:12px;padding:13px 18px;margin-bottom:14px;background:#fafbfc">
+      ${sh(t('careAdviceTitle'),'#64748b')}
+      ${envCareAdvice().map(a=>`<div style="margin-bottom:7px"><div style="font-size:11.5px;font-weight:800;color:#334155;margin-bottom:1px">${a.h}</div><div style="font-size:10.5px;color:#64748b;line-height:1.55">${a.d}</div></div>`).join('')}
+    </div>` : '';
   const twRow=(label,val,extra)=>`<div style="display:flex;justify-content:space-between;align-items:baseline;padding:3px 0;font-size:11px"><span style="color:#64748b">${label}</span><span style="font-weight:700;color:#334155">${val}${extra||''}</span></div>`;
   const twBlockHTML = hasTouch ? `
     <div style="margin-top:${numFields.length?'12px':'0'};padding-top:${numFields.length?'10px':'0'};${numFields.length?'border-top:1px solid #e2e8f0;':''}">
@@ -1453,8 +1561,9 @@ function buildPDFTemplate() {
       <div style="flex:1.1;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fafbfc">
         ${sh(t('pdfAssessment'),'#64748b')}
         <table style="width:100%;border-collapse:collapse">
-          ${cats.map(([key,label])=>{const r=S[key];const bg=r?ratingBg[r]:'#f1f5f9';const col=r?ratingColor[r]:'#94a3b8';return`<tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569">${label}</td><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;text-align:right"><span style="background:${bg};color:${col};font-weight:800;font-size:12px;padding:2px 10px;border-radius:20px">${r||'—'}</span></td></tr>`;}).join('')}
+          ${cats.map(([key,label])=>{const r=S[key];const bg=r?ratingBg[r]:'#f1f5f9';const col=r?ratingColor[r]:'#94a3b8';const risk=(key==='tuningStability'&&envTuningRisk())?`<div style="font-size:9.5px;color:#b45309;font-weight:700;margin-top:2px">${t('tuningRiskNote')}</div>`:'';return`<tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569">${label}${risk}</td><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top"><span style="background:${bg};color:${col};font-weight:800;font-size:12px;padding:2px 10px;border-radius:20px">${r||'—'}</span></td></tr>`;}).join('')}
         </table>
+        ${envBlockHTML}
       </div>
       ${hasMeasure?`<div style="flex:1;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fafbfc">
         ${sh(t('pdfMeasure'),'#64748b')}
@@ -1477,6 +1586,9 @@ function buildPDFTemplate() {
       ${sh(t('pdfNotes'),'#64748b')}
       <div style="padding:10px 13px;background:#f8fafc;border-radius:9px;border:1px solid #e2e8f0;font-size:12px;color:#475569;line-height:1.7">${esc(S.techNotes).replace(/\n/g,'<br>')}</div>
     </div>`:''}
+
+    <!-- 9. CARE ADVICE (environment) -->
+    ${careAdviceHTML}
 
     <!-- FOOTER -->
     <div style="border-top:1px solid #e2e8f0;padding-top:10px;display:flex;justify-content:space-between;align-items:center">
@@ -1506,9 +1618,10 @@ function buildPreviewHTML() {
   const cats=[['touch',t('touch')],['tone',t('tone')],['action',t('action')],['hammers',t('hammers')],['pedals',t('pedals')],['tuningStability',t('tuningStability')]];
   const pianoLine=[S.manufacturer,S.model].filter(Boolean).join(' ') || (isJa?'（ピアノ情報 未入力）':'(piano details pending)');
   const dateStr=S.inspectionDate||'';
-  const numFields=[{key:'humidity',label:t('humidity'),unit:'%'},{key:'pitch',label:t('pitch'),unit:'Hz'}].filter(f=>S[f.key]);
+  const numFields=[{key:'pitch',label:t('pitch'),unit:'Hz'}].filter(f=>S[f.key]);
   const qualFields=[{key:'keyDip',label:t('keyDip')},{key:'letOff',label:t('letOff')}].filter(f=>S[f.key]);
   const tw=getTouchWeight();
+  const envSt=environmentStatusOf(S);
   const hasRatings=cats.some(([k])=>S[k]);
   const hasMeasure=numFields.length||qualFields.length||tw;
 
@@ -1568,6 +1681,16 @@ function buildPreviewHTML() {
     }
     h+='</div>';
   }
+  // Environment
+  if(envSt){
+    const ec=envStatusColor(envSt), tmp=envTempDisplay(S);
+    h+=`<div class="pv-sec"><div class="pv-sec-title">${t('envTitle')}</div>`;
+    h+=`<div class="pv-row"><span class="pv-cat">${t('envHumidityShort')}</span><span style="font-weight:600;color:var(--text-2)">${esc(S.humidity)}%</span></div>`;
+    if(tmp) h+=`<div class="pv-row"><span class="pv-cat">${t('lblTemperature')}</span><span style="font-weight:600;color:var(--text-2)">${esc(tmp)}</span></div>`;
+    h+=`<div class="pv-row"><span class="pv-cat">${t('lblStatus')}</span><span style="font-weight:700;color:${ec}">${envStatusLabel(envSt)}</span></div>`;
+    h+=`<div style="font-size:11px;color:${ec};font-weight:600;line-height:1.5;margin-top:5px">${esc(envRecommendationShort(envSt))}</div>`;
+    h+='</div>';
+  }
   h+='</div></div>';
   return h;
 }
@@ -1616,6 +1739,9 @@ function buildSnapshot(){
   // Include derived touch-weight values for the saved record (recomputed on load from downweight/upweight)
   const tw=touchWeightOf(S);
   if(tw){ s.balanceWeight=tw.bw; s.friction=tw.fr; s.balanceWeightStatus=tw.bwStatus; s.frictionStatus=tw.frStatus; }
+  // Include environment status (recomputed on load from humidity)
+  const env=environmentStatusOf(S);
+  if(env){ s.environmentStatus=env; }
   return s;
 }
 function applySnapshot(st,id){
