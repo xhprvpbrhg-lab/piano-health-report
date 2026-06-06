@@ -553,7 +553,9 @@ const T = {
     customerGoals:'Customer Goals',
     techNotes:'Technician Notes', notesPlaceholder:'Add supplementary notes (optional)…',
     // Status
-    excellent:'Excellent', good:'Good', fair:'Fair', attention:'Needs Attention',
+    excellent:'Excellent', good:'Good', fair:'Maintenance Recommended', attention:'Needs Attention',
+    rcA:'Excellent', rcB:'Good', rcC:'Needs Improvement', rcD:'Needs Attention',
+    tempLow:'Too Low', tempHigh:'Too High', envAdviceTitle:'Environment Advice',
     back:'Back', next:'Next →', generatePDF:'Generate PDF', pdfIcon:'📄',
     improveSummaryLabel:'To Improve', preserveSummaryLabel:'To Preserve',
     // PDF
@@ -626,7 +628,7 @@ const T = {
     envTitle:'環境（温湿度）', lblHumidityRH:'湿度 (RH %)', lblTemperature:'温度',
     lblStatus:'状態', lblRecommendation:'アドバイス', careAdviceTitle:'環境管理アドバイス',
     envIdeal:'理想的', envAcceptable:'許容範囲', envHigh:'高め', envDry:'乾燥',
-    tuningRiskNote:'⚠ 環境要因による変動リスクあり', envHumidityShort:'湿度',
+    tuningRiskNote:'⚠ 環境変動リスクあり', envHumidityShort:'湿度',
     keyDip:'鍵盤深さ', letOff:'レットオフ',
     normal:'標準', shallow:'浅い', deep:'深い', wide:'広い', close:'狭い',
     s5Title:'所見・サービス提案', s5Desc:'所見を入力し、サービスを選択してレポートを作成します',
@@ -645,7 +647,9 @@ const T = {
     conditionAssessment:'各部状態評価（根拠資料）',
     customerGoals:'お客様のご要望',
     techNotes:'技術者メモ', notesPlaceholder:'補足メモを追加（任意）…',
-    excellent:'優良', good:'良好', fair:'要注意', attention:'要対応',
+    excellent:'優良', good:'良好', fair:'メンテナンス推奨', attention:'要対応',
+    rcA:'優良', rcB:'良好', rcC:'改善推奨', rcD:'要対応',
+    tempLow:'低すぎ', tempHigh:'高すぎ', envAdviceTitle:'環境改善提案',
     back:'戻る', next:'次へ →', generatePDF:'PDFを作成', pdfIcon:'📄',
     improveSummaryLabel:'改善希望', preserveSummaryLabel:'維持希望',
     pdfHeaderSub:'ピアノ健康診断レポート',
@@ -719,8 +723,49 @@ function environmentStatusOf(s){
 function getEnvironment(){ const st=environmentStatusOf(S); return st?{status:st}:null; }
 function envTuningRisk(){ const st=environmentStatusOf(S); return st==='high'||st==='dry'; }
 function envStatusLabel(st){ return st?({ideal:t('envIdeal'),acceptable:t('envAcceptable'),high:t('envHigh'),dry:t('envDry')}[st]):''; }
-function envStatusColor(st){ return ({ideal:'#16a34a',acceptable:'#65a30d',high:'#dc2626',dry:'#2563eb'})[st]||'#64748b'; }
+// Humidity colour coding: Ideal→green, Acceptable→blue, High→orange, Dry→red
+function envStatusColor(st){ return ({ideal:'#16a34a',acceptable:'#2563eb',high:'#d97706',dry:'#dc2626'})[st]||'#64748b'; }
 function envTempDisplay(s){ const tv=(s.temperature==null?'':String(s.temperature).trim()); return tv===''?'':(tv+'°'+(s.tempUnit||'C')); }
+// Temperature judgment (supporting): Ideal 21–22°C, Acceptable 18–25°C, Too Low <18, Too High >25
+function temperatureStatusOf(s){
+  const raw=s.temperature; if(raw==null||String(raw).trim()==='') return null;
+  const v=parseFloat(raw); if(isNaN(v)) return null;
+  // Unit-native thresholds — C: ideal 21–22, acc 18–25 · F: ideal 70–72, acc 64–77
+  const th = (s.tempUnit||'C')==='F'
+    ? {accMin:64, idealMin:70, idealMax:72, accMax:77}
+    : {accMin:18, idealMin:21, idealMax:22, accMax:25};
+  if(v<th.accMin) return 'low';
+  if(v>th.accMax) return 'high';
+  if(v>=th.idealMin && v<=th.idealMax) return 'ideal';
+  return 'acceptable';
+}
+function tempStatusLabel(st){ return st?({ideal:t('envIdeal'),acceptable:t('envAcceptable'),low:t('tempLow'),high:t('tempHigh')}[st]):''; }
+function tempStatusColor(st){ return ({ideal:'#16a34a',acceptable:'#2563eb',low:'#dc2626',high:'#d97706'})[st]||'#64748b'; }
+// Combined humidity + temperature narrative
+function environmentSummary(){
+  const hs=environmentStatusOf(S); if(!hs) return '';
+  const parts=[envExplanation(hs)];
+  const ts=temperatureStatusOf(S);
+  if(ts) parts.push(({
+    ideal: isJa?'温度は理想的な範囲です。':'Temperature is in the ideal range.',
+    acceptable: isJa?'温度は許容範囲内です。':'Temperature is within an acceptable range.',
+    low: isJa?'温度はやや低めです。':'Temperature is a little low.',
+    high: isJa?'温度はやや高めです。':'Temperature is a little high.',
+  })[ts]);
+  return parts.join('\n');
+}
+// Natural-language environment note for the technician summary
+function envSummarySentence(){
+  const st=environmentStatusOf(S);
+  if(st==='high') return isJa
+    ?'現在の湿度は高めです。調律安定性、アクションの動き、金属部品に影響する可能性があります。定期的なメンテナンスとあわせて、室内環境の管理をおすすめします。'
+    :'The room humidity is currently high. This may affect tuning stability, action response, and metal parts over time. Environmental control is recommended along with regular service.';
+  if(st==='dry') return isJa
+    ?'現在の環境は乾燥傾向です。調律安定性、響板の動き、タッチの安定性に影響する可能性があります。湿度管理をおすすめします。'
+    :'The room is currently dry. Dryness may affect tuning stability, soundboard movement, and touch consistency. Humidity control is recommended.';
+  return '';
+}
+function ratingCustomerLabel(r){ return r?({A:t('rcA'),B:t('rcB'),C:t('rcC'),D:t('rcD')}[r]):''; }
 function envExplanation(st){ return ({
   ideal: isJa?'現在の湿度環境は理想的です。音色、タッチ、調律安定性を維持しやすい状態です。':'The current humidity is ideal — it helps maintain tone, touch, and tuning stability.',
   acceptable: isJa?'現在の湿度環境は許容範囲内です。大きな問題はありませんが、季節変化による変動にはご注意ください。':'The current humidity is acceptable. No major issues, but watch for seasonal fluctuations.',
@@ -1002,7 +1047,8 @@ function generateTechnicianSummary() {
   const anyIssue=any(tone)||any(touch)||any(tun)||any(ped);
   const tw=touchWeightOf(S);
   const twHeavy=tw && (tw.bwStatus==='high'||tw.frStatus==='high');
-  if(!any(ov)&&!anyIssue&&!twHeavy) return '';
+  const envSentence=envSummarySentence();
+  if(!any(ov)&&!anyIssue&&!twHeavy&&!envSentence) return '';
 
   const isPlayable=ovKeys.includes('playable'), isMaint=ovKeys.includes('maintenance'),
         isFollow=ovKeys.includes('followup'), isRepair=ovKeys.includes('repair');
@@ -1038,7 +1084,8 @@ function generateTechnicianSummary() {
   }
   if(any(tun)){const j=joinEmbeds(tun);paras.push((isJa&&(any(tone)||any(touch))?'また、':'')+(isJa?`調律面では${j}が見られます。継続してこの傾向が確認される場合は、チューニングピンや弦周りの詳細点検をお勧めします。`:`The piano shows ${j}. If this continues, a detailed inspection of the tuning pins and strings is recommended.`));}
   if(any(ped)){const j=joinEmbeds(ped);paras.push((isJa&&anyIssue?'また、':'')+(isJa?`ペダルには${j}が確認されました。ペダル整備をお勧めします。`:`The pedals show ${j}. Pedal service is recommended.`));}
-  if(anyIssue||isMaint||isRepair||twHeavy) paras.push(isJa?'定期的なメンテナンスにより、より快適な演奏状態を保つことができます。':'Regular maintenance will help keep the piano in a more comfortable playing condition.');
+  if(envSentence) paras.push(envSentence);
+  if(anyIssue||isMaint||isRepair||twHeavy||envSentence) paras.push(isJa?'定期的なメンテナンスにより、より快適な演奏状態を保つことができます。':'Regular maintenance will help keep the piano in a more comfortable playing condition.');
   return paras.join('\n\n');
 }
 
@@ -1170,6 +1217,7 @@ function environmentResultHTML(){
       <span style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.4px">${t('lblStatus')}</span>
       <span style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;color:${col}">${envStatusLabel(st)}</span>
     </div>
+    ${(()=>{const tmp=envTempDisplay(S);const ts=temperatureStatusOf(S);return tmp?`<div style="font-size:12.5px;color:var(--text-3);margin-bottom:8px"><b style="color:var(--text-2)">${t('lblTemperature')}:</b> ${esc(tmp)}${ts?` <span style="color:${tempStatusColor(ts)};font-weight:700">/ ${tempStatusLabel(ts)}</span>`:''}</div>`:'';})()}
     <div style="font-size:13px;color:var(--text-2);line-height:1.65;margin-bottom:9px">${envExplanation(st)}</div>
     <div style="font-size:11px;color:var(--text-3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${t('lblRecommendation')}</div>
     <div style="font-size:13px;color:${col};font-weight:600;line-height:1.5">${envRecommendationShort(st)}</div>
@@ -1414,19 +1462,25 @@ function buildPDFTemplate() {
   const tw=getTouchWeight();
   const hasTouch=tw || S.downweight || S.upweight;
   const hasMeasure=numFields.length||qualFields.length||hasTouch;
-  // Environment block (Condition Assessment) + care advice
+  // Environment block (Condition Assessment) + advice
   const envSt=environmentStatusOf(S);
   const envCol=envSt?envStatusColor(envSt):'#64748b';
   const envTempStr=envTempDisplay(S);
+  const tempSt=temperatureStatusOf(S);
   const envBlockHTML = envSt ? `
-    <div style="border:1px solid ${envCol}40;background:${envCol}0c;border-radius:10px;padding:11px 14px;margin-top:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div style="border:1.5px solid ${envCol}55;background:${envCol}0d;border-radius:10px;padding:11px 14px;margin-top:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">
         <span style="font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#64748b">${t('envTitle')}</span>
-        <span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:800;color:${envCol}">${envStatusLabel(envSt)}</span>
+        <span style="font-size:11px;font-weight:800;color:#fff;background:${envCol};padding:2px 11px;border-radius:20px">${envStatusLabel(envSt)}</span>
       </div>
-      <div style="font-size:11px;color:#475569;margin-bottom:2px"><b>${t('envHumidityShort')}:</b> ${esc(S.humidity)}%${envTempStr?`　<b>${t('lblTemperature')}:</b> ${esc(envTempStr)}`:''}</div>
-      <div style="font-size:11px;color:#334155;line-height:1.55;margin-top:4px">${envExplanation(envSt)}</div>
-      <div style="font-size:11px;color:${envCol};font-weight:700;line-height:1.5;margin-top:5px">▶ ${envRecommendationList(envSt).join(isJa?'／':' · ')}</div>
+      <div style="font-size:11px;color:#475569;margin-bottom:2px"><b>${t('envHumidityShort')}:</b> ${esc(S.humidity)}%</div>
+      ${envTempStr?`<div style="font-size:11px;color:#475569;margin-bottom:3px"><b>${t('lblTemperature')}:</b> ${esc(envTempStr)}${tempSt?` <span style="color:${tempStatusColor(tempSt)};font-weight:700">/ ${tempStatusLabel(tempSt)}</span>`:''}</div>`:''}
+      <div style="font-size:11px;color:#334155;line-height:1.55;margin-top:4px">${environmentSummary().split('\n').map(p=>esc(p)).join('<br>')}</div>
+    </div>` : '';
+  const envAdviceHTML = envSt ? `
+    <div style="border:1px solid ${envCol}55;border-radius:12px;padding:13px 18px;margin-bottom:14px;background:${envCol}0a">
+      ${sh(t('envAdviceTitle'),envCol)}
+      ${envRecommendationList(envSt).map(r=>`<div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:4px"><span style="color:${envCol};font-weight:800;font-size:13px;line-height:1.4">•</span><span style="font-size:11.5px;color:#334155;line-height:1.5">${esc(r)}</span></div>`).join('')}
     </div>` : '';
   const careAdviceHTML = envSt ? `
     <div style="border:1px solid #e2e8f0;border-radius:12px;padding:13px 18px;margin-bottom:14px;background:#fafbfc">
@@ -1501,20 +1555,20 @@ function buildPDFTemplate() {
       </div>
     </div>
 
-    <!-- 1. CUSTOMER GOALS -->
+    <!-- 1. CUSTOMER GOALS (emphasised — the starting point of the report) -->
     ${(impSel.length||presSel.length||S.improveComment||S.preserveComment)?`
-    <div style="border:1px solid #e2e8f0;border-radius:12px;padding:14px 18px;margin-bottom:14px;background:#f8fafc">
-      ${sh(t('pdfGoals'),'#2563eb')}
-      <div style="display:flex;gap:22px">
+    <div style="border:1px solid #c7d7f5;border-left:4px solid #2563eb;border-radius:12px;padding:16px 20px;margin-bottom:16px;background:#f5f9ff">
+      <div style="font-size:12px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:#1e3a8a;margin-bottom:13px">★ ${t('pdfGoals')}</div>
+      <div style="display:flex;gap:24px">
         ${(impSel.length||S.improveComment)?`<div style="flex:1">
-          <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">${t('pdfImprove')}</div>
-          ${impSel.map(o=>check(o,'#2563eb')).join('')}
-          ${S.improveComment?`<div style="margin-top:5px;padding:5px 9px;background:#eff6ff;border-radius:6px;font-size:11px;color:#475569;font-style:italic">${esc(S.improveComment)}</div>`:''}
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:8px;height:8px;border-radius:50%;background:#2563eb"></span><span style="font-size:11px;font-weight:800;color:#1e3a8a;text-transform:uppercase;letter-spacing:.6px">${t('pdfImprove')}</span></div>
+          ${impSel.map(o=>`<div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:5px"><span style="color:#2563eb;font-size:12px;font-weight:800;line-height:1.4">✓</span><span style="font-size:12px;color:#1a202c;font-weight:600;line-height:1.5">${esc(o)}</span></div>`).join('')}
+          ${S.improveComment?`<div style="margin-top:7px;padding:7px 11px;background:#fff;border:1px solid #dbeafe;border-radius:7px;font-size:11px;color:#475569;line-height:1.55">${esc(S.improveComment)}</div>`:''}
         </div>`:''}
         ${(presSel.length||S.preserveComment)?`<div style="flex:1">
-          <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">${t('pdfPreserve')}</div>
-          ${presSel.map(o=>check(o,'#22c55e')).join('')}
-          ${S.preserveComment?`<div style="margin-top:5px;padding:5px 9px;background:#f0fdf4;border-radius:6px;font-size:11px;color:#475569;font-style:italic">${esc(S.preserveComment)}</div>`:''}
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:8px;height:8px;border-radius:50%;background:#22c55e"></span><span style="font-size:11px;font-weight:800;color:#15803d;text-transform:uppercase;letter-spacing:.6px">${t('pdfPreserve')}</span></div>
+          ${presSel.map(o=>`<div style="display:flex;align-items:flex-start;gap:7px;margin-bottom:5px"><span style="color:#22c55e;font-size:12px;font-weight:800;line-height:1.4">✓</span><span style="font-size:12px;color:#1a202c;font-weight:600;line-height:1.5">${esc(o)}</span></div>`).join('')}
+          ${S.preserveComment?`<div style="margin-top:7px;padding:7px 11px;background:#fff;border:1px solid #bbf7d0;border-radius:7px;font-size:11px;color:#475569;line-height:1.55">${esc(S.preserveComment)}</div>`:''}
         </div>`:''}
       </div>
     </div>`:''}
@@ -1561,7 +1615,7 @@ function buildPDFTemplate() {
       <div style="flex:1.1;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fafbfc">
         ${sh(t('pdfAssessment'),'#64748b')}
         <table style="width:100%;border-collapse:collapse">
-          ${cats.map(([key,label])=>{const r=S[key];const bg=r?ratingBg[r]:'#f1f5f9';const col=r?ratingColor[r]:'#94a3b8';const risk=(key==='tuningStability'&&envTuningRisk())?`<div style="font-size:9.5px;color:#b45309;font-weight:700;margin-top:2px">${t('tuningRiskNote')}</div>`:'';return`<tr><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569">${label}${risk}</td><td style="padding:6px 0;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top"><span style="background:${bg};color:${col};font-weight:800;font-size:12px;padding:2px 10px;border-radius:20px">${r||'—'}</span></td></tr>`;}).join('')}
+          ${cats.map(([key,label])=>{const r=S[key];const bg=r?ratingBg[r]:'#f1f5f9';const col=r?ratingColor[r]:'#94a3b8';const risk=(key==='tuningStability'&&envTuningRisk())?`<div style="font-size:9.5px;color:#b45309;font-weight:700;margin-top:2px">${t('tuningRiskNote')}</div>`:'';return`<tr><td style="padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569">${label}${risk}</td><td style="padding:7px 0;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top"><span style="background:${bg};color:${col};font-weight:800;font-size:12px;padding:2px 10px;border-radius:20px">${r||'—'}</span>${r?`<div style="font-size:9.5px;color:${col};font-weight:700;margin-top:3px">${ratingCustomerLabel(r)}</div>`:''}</td></tr>`;}).join('')}
         </table>
         ${envBlockHTML}
       </div>
@@ -1580,6 +1634,9 @@ function buildPDFTemplate() {
         ${twBlockHTML}
       </div>`:''}
     </div>
+
+    <!-- 6b. ENVIRONMENT ADVICE (separate from Recommended Services) -->
+    ${envAdviceHTML}
 
     <!-- 8. TECHNICIAN NOTES -->
     ${S.techNotes?`<div style="margin-bottom:14px">
@@ -1666,7 +1723,7 @@ function buildPreviewHTML() {
   // 6. Condition assessment
   if(hasRatings){
     h+=`<div class="pv-sec"><div class="pv-sec-title">${t('pdfAssessment')}</div>`;
-    h+=cats.filter(([k])=>S[k]).map(([k,label])=>`<div class="pv-row"><span class="pv-cat">${label}</span><span class="pv-pill" style="${rpill[S[k]]}">${S[k]}</span></div>`).join('');
+    h+=cats.filter(([k])=>S[k]).map(([k,label])=>`<div class="pv-row"><span class="pv-cat">${label}</span><span><span class="pv-pill" style="${rpill[S[k]]}">${S[k]}</span> <span style="font-size:10.5px;color:var(--text-3);font-weight:600">${ratingCustomerLabel(S[k])}</span></span></div>`).join('');
     h+='</div>';
   }
   // 7. Measured values
@@ -1686,7 +1743,7 @@ function buildPreviewHTML() {
     const ec=envStatusColor(envSt), tmp=envTempDisplay(S);
     h+=`<div class="pv-sec"><div class="pv-sec-title">${t('envTitle')}</div>`;
     h+=`<div class="pv-row"><span class="pv-cat">${t('envHumidityShort')}</span><span style="font-weight:600;color:var(--text-2)">${esc(S.humidity)}%</span></div>`;
-    if(tmp) h+=`<div class="pv-row"><span class="pv-cat">${t('lblTemperature')}</span><span style="font-weight:600;color:var(--text-2)">${esc(tmp)}</span></div>`;
+    if(tmp){const ts=temperatureStatusOf(S);h+=`<div class="pv-row"><span class="pv-cat">${t('lblTemperature')}</span><span style="font-weight:600;color:var(--text-2)">${esc(tmp)}${ts?` · <span style="color:${tempStatusColor(ts)};font-weight:700">${tempStatusLabel(ts)}</span>`:''}</span></div>`;}
     h+=`<div class="pv-row"><span class="pv-cat">${t('lblStatus')}</span><span style="font-weight:700;color:${ec}">${envStatusLabel(envSt)}</span></div>`;
     h+=`<div style="font-size:11px;color:${ec};font-weight:600;line-height:1.5;margin-top:5px">${esc(envRecommendationShort(envSt))}</div>`;
     h+='</div>';
