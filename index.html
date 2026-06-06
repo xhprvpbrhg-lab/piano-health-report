@@ -509,7 +509,7 @@ const T = {
     s1Card:'Customer Feedback',
     s1Q1:'What would you like to improve?',
     improveOpts:['Tone is too bright','Tone is too dull','Touch is too heavy','Touch is too light','Tuning does not hold','Pedal concerns'],
-    s1Q2:'What would you like to preserve?',
+    s1Q2:'What do you like about it?',
     preserveOpts:['Current tone','Current touch','Current volume','Overall character'],
     additionalComments:'Additional comments',
     // Step 2
@@ -557,7 +557,7 @@ const T = {
     rcA:'Excellent', rcB:'Good', rcC:'Needs Improvement', rcD:'Needs Attention',
     tempLow:'Too Low', tempHigh:'Too High', envAdviceTitle:'Environment Advice',
     back:'Back', next:'Next →', generatePDF:'Generate PDF', pdfIcon:'📄',
-    improveSummaryLabel:'To Improve', preserveSummaryLabel:'To Preserve',
+    improveSummaryLabel:'To Improve', preserveSummaryLabel:'Things You Like',
     // PDF
     pdfHeaderSub:'Piano Service Planner',
     pdfGoals:'CUSTOMER GOALS',
@@ -569,7 +569,7 @@ const T = {
     pdfMeasure:'MEASURED VALUES',
     pdfNotes:'TECHNICIAN NOTES',
     pdfKeyFocus:'KEY FOCUS', pdfNextStep:'RECOMMENDED NEXT STEP',
-    pdfImprove:'Things to Improve', pdfPreserve:'Things to Preserve',
+    pdfImprove:'Things to Improve', pdfPreserve:'Things You Like',
     pdfWhyRec:'Why Recommended',
     pdfExpBenefit:'Expected Benefit',
     pdfNotSpecified:'Not specified', pdfNone:'—',
@@ -608,7 +608,7 @@ const T = {
     s1Card:'お客様フィードバック',
     s1Q1:'改善したい点は何ですか？',
     improveOpts:['音が明るすぎる','音が暗すぎる','タッチが重すぎる','タッチが軽すぎる','調律が安定しない','ペダルの問題'],
-    s1Q2:'維持したい点は何ですか？',
+    s1Q2:'気に入っている点はどこですか？',
     preserveOpts:['現在の音色','現在のタッチ','現在の音量','全体的な特性'],
     additionalComments:'追加コメント',
     s2Title:'ピアノ情報', s2Desc:'ピアノとお客様の詳細を入力します',
@@ -651,7 +651,7 @@ const T = {
     rcA:'優良', rcB:'良好', rcC:'改善推奨', rcD:'要対応',
     tempLow:'低すぎ', tempHigh:'高すぎ', envAdviceTitle:'環境改善提案',
     back:'戻る', next:'次へ →', generatePDF:'PDFを作成', pdfIcon:'📄',
-    improveSummaryLabel:'改善希望', preserveSummaryLabel:'維持希望',
+    improveSummaryLabel:'改善希望', preserveSummaryLabel:'気に入っている点',
     pdfHeaderSub:'ピアノ健康診断レポート',
     pdfGoals:'お客様のご要望',
     pdfTechSummary:'技術者総評',
@@ -662,7 +662,7 @@ const T = {
     pdfMeasure:'計測値',
     pdfNotes:'技術者メモ',
     pdfKeyFocus:'特に注目すべき点', pdfNextStep:'推奨される次の一手',
-    pdfImprove:'改善したいこと', pdfPreserve:'維持したいこと',
+    pdfImprove:'改善したいこと', pdfPreserve:'気に入っている点',
     pdfWhyRec:'推奨理由',
     pdfExpBenefit:'期待できる改善',
     pdfNotSpecified:'未入力', pdfNone:'—',
@@ -688,8 +688,8 @@ const t = k => T[lang][k] !== undefined ? T[lang][k] : (T.en[k] !== undefined ? 
 // ── Touch weight (Downweight / Upweight → Balance Weight / Friction) ──
 // Provisional thresholds — tune here later.
 const TOUCH_THRESHOLDS = {
-  balanceWeight: { low: 36, high: 42 }, // g: <low=Low, >high=High, else Standard
-  friction:      { low: 8,  high: 14 },
+  balanceWeight: { low: 36, high: 42, veryHigh: 48 }, // g: <low=Low, >high=High, else Standard
+  friction:      { low: 8,  high: 14, veryHigh: 20 },
 };
 function touchStatus(v, th){ return v < th.low ? 'low' : (v > th.high ? 'high' : 'standard'); }
 function touchWeightOf(s){
@@ -766,6 +766,61 @@ function envSummarySentence(){
   return '';
 }
 function ratingCustomerLabel(r){ return r?({A:t('rcA'),B:t('rcB'),C:t('rcC'),D:t('rcD')}[r]):''; }
+function ratingTextColor(r){ return ({A:'#16a34a',B:'#65a30d',C:'#d97706',D:'#dc2626'})[r]||'#94a3b8'; }
+
+// ── Auto-evaluated ratings (objective inputs → A/B/C/D) ───────────
+// Subjective (manual): Tone, Hammers, Pedals. Auto: Touch, Action, Tuning Stability.
+const AUTO_CATS=['touch','action','tuningStability'];
+// Touch ← Touch Weight (Balance / Friction). Severity: Standard→0, High→1, Very High→2.
+function twSeverity(status, val, thKey){
+  if(status==='standard') return 0;
+  if(status==='high' && val > TOUCH_THRESHOLDS[thKey].veryHigh) return 2;
+  return 1; // high (not very high) or low
+}
+function autoTouchRating(){
+  const tw=touchWeightOf(S); if(!tw) return '';
+  const sev=Math.max(twSeverity(tw.bwStatus,tw.bw,'balanceWeight'), twSeverity(tw.frStatus,tw.fr,'friction'));
+  return sev===0?'B':(sev===1?'C':'D');
+}
+// Action ← regulation items (Key Dip, Let-off)
+function autoActionRating(){
+  const vals=[S.keyDip,S.letOff].filter(Boolean);
+  if(!vals.length) return '';
+  const issues=vals.filter(v=>v!=='normal').length;
+  return issues>=2?'D':(issues===1?'C':'B');
+}
+// Tuning Stability ← pitch + environment + customer goal + technician finding
+function autoTuningRating(){
+  const factors=[];
+  const p=parseFloat(S.pitch), pitchPresent=String(S.pitch).trim()!==''&&!isNaN(p);
+  if(pitchPresent && (p<=435||p>=445)) factors.push('pitch');
+  const env=environmentStatusOf(S); if(env==='high'||env==='dry') factors.push('env');
+  if(S.improve && S.improve[4]) factors.push('goal');
+  if(((S.findings&&S.findings.tuning)||[])[1]) factors.push('finding');
+  const hasInput = pitchPresent || env!=null || (S.improve&&S.improve[4]) || ((S.findings&&S.findings.tuning)||[]).some(Boolean);
+  if(!hasInput) return '';
+  return factors.length>=2?'D':(factors.length===1?'C':'B');
+}
+// Recompute auto categories into S (downstream logic keeps using S[cat])
+function applyAutoRatings(){
+  S.touch=autoTouchRating();
+  S.action=autoActionRating();
+  S.tuningStability=autoTuningRating();
+}
+function autoDriverHint(key){ return ({
+  touch: isJa?'タッチ重量から自動評価':'Auto from touch weight',
+  action: isJa?'鍵盤深さ・レットオフから自動評価':'Auto from key dip & let-off',
+  tuningStability: isJa?'ピッチ・環境・ご要望・所見から自動評価':'Auto from pitch, environment & findings',
+})[key]||''; }
+function autoRatingDisplayHTML(key){
+  const r=S[key];
+  if(!r) return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:13px;color:var(--gray-soft);font-style:italic">${t('notMeasured')}</span><span style="font-size:10px;color:var(--text-3)">${autoDriverHint(key)}</span></div>`;
+  return `<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+    <span style="background:#EFF4FF;color:var(--navy);font-size:9px;font-weight:700;letter-spacing:.5px;padding:2px 6px;border-radius:5px">AUTO</span>
+    <span style="font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;color:${ratingTextColor(r)}">${ratingCustomerLabel(r)}</span>
+    <span style="font-size:10px;color:var(--text-3);margin-left:auto">${autoDriverHint(key)}</span></div>`;
+}
+function updateAutoRatings(){ applyAutoRatings(); AUTO_CATS.forEach(key=>{const el=document.getElementById('auto-rating-'+key); if(el) el.innerHTML=autoRatingDisplayHTML(key);}); }
 function envExplanation(st){ return ({
   ideal: isJa?'現在の湿度環境は理想的です。音色、タッチ、調律安定性を維持しやすい状態です。':'The current humidity is ideal — it helps maintain tone, touch, and tuning stability.',
   acceptable: isJa?'現在の湿度環境は許容範囲内です。大きな問題はありませんが、季節変化による変動にはご注意ください。':'The current humidity is acceptable. No major issues, but watch for seasonal fluctuations.',
@@ -971,6 +1026,7 @@ try {
 } catch(e) {}
 
 function save() {
+  if (typeof applyAutoRatings === 'function') applyAutoRatings();
   try { localStorage.setItem('pianoHealthReport', JSON.stringify(S)); } catch(e) {}
   if (typeof updateLivePreview === 'function') updateLivePreview();
   if (typeof scheduleAutoSave === 'function') scheduleAutoSave();
@@ -1104,6 +1160,7 @@ function renderTabs() {
 window.goToStep=n=>{ collectStep(); S.step=n; render(); window.scrollTo(0,0); };
 
 function render() {
+  applyAutoRatings();
   document.getElementById('h-title').textContent=t('appTitle');
   document.getElementById('h-sub').textContent=t('appSub');
   document.body.classList.toggle('on-report', S.step===5);
@@ -1158,7 +1215,10 @@ function renderStep3() {
     <div class="card-sub">${t('ratingGuide')}</div>
   ${cats.map(([key,label],i)=>`${i>0?'<div class="divider"></div>':''}
     <div class="assess-row"><div class="assess-name">${label}</div>
-    <div class="rating-row">${['A','B','C','D'].map(r=>`<button class="rating-btn${S[key]===r?' sel-'+r:''}" onclick="setRating('${key}','${r}')">${t('r'+r)}<small>${t('r'+r+'l')}</small></button>`).join('')}</div>${key==='tuningStability'?`<div id="tuning-risk-note">${tuningRiskNoteHTML()}</div>`:''}</div>`).join('')}
+    ${AUTO_CATS.includes(key)
+      ? `<div id="auto-rating-${key}">${autoRatingDisplayHTML(key)}</div>${key==='tuningStability'?`<div id="tuning-risk-note">${tuningRiskNoteHTML()}</div>`:''}`
+      : `<div class="rating-row">${['A','B','C','D'].map(r=>`<button class="rating-btn${S[key]===r?' sel-'+r:''}" onclick="setRating('${key}','${r}')">${t('r'+r)}<small>${t('r'+r+'l')}</small></button>`).join('')}</div>`}
+    </div>`).join('')}
   </div>
   <div class="card"><div class="card-title">${t('envTitle')}</div>
     <div class="input-row">
@@ -1320,6 +1380,8 @@ function attachListeners() {
   ['downweight','upweight'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)el.addEventListener('input',updateTouchWeight);});
   // Live-recompute environment status as humidity/temperature change
   ['humidity','temperature'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)el.addEventListener('input',updateEnv);});
+  // Live-recompute auto ratings (Touch/Action/Tuning) as objective inputs change
+  ['downweight','upweight','pitch','humidity','temperature'].forEach(k=>{const el=document.getElementById('f-'+k);if(el)el.addEventListener('input',updateAutoRatings);});
   bind('techNotes','techNotes');
   updateSummaryPreview();
 }
@@ -1430,6 +1492,7 @@ async function generatePDF() {
 }
 
 function buildPDFTemplate() {
+  applyAutoRatings();
   const status=getOverallStatus()||'good';
   const io=t('improveOpts'),po=t('preserveOpts');
   const impSel=io.filter((_,i)=>S.improve[i]),presSel=po.filter((_,i)=>S.preserve[i]);
@@ -1449,7 +1512,8 @@ function buildPDFTemplate() {
   }[status];
 
   const pianoLine=[S.manufacturer,S.model].filter(Boolean).join(' ')||t('pdfNotSpecified');
-  const snYear=[S.serialNumber?`S/N: ${S.serialNumber}`:'',S.year||''].filter(Boolean).join('  ·  ');
+  const serialSuffix=S.serialNumber?(isJa?`（製造番号：${esc(S.serialNumber)}）`:` (Serial No.: ${esc(S.serialNumber)})`):'';
+  const snYear=S.year||'';
   const dateStr=S.inspectionDate||new Date().toISOString().split('T')[0];
 
   const sh=(label,color='#1e3a5f')=>`<div style="font-size:9px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:${color};padding-bottom:6px;margin-bottom:10px;border-bottom:2px solid ${color}">${label}</div>`;
@@ -1544,7 +1608,7 @@ function buildPDFTemplate() {
           </svg>
           <span style="font-size:15px;font-weight:800;letter-spacing:-.2px">${t('pdfHeaderSub')}</span>
         </div>
-        <div style="font-size:21px;font-weight:900;letter-spacing:-.5px">${esc(pianoLine)}</div>
+        <div style="font-size:21px;font-weight:900;letter-spacing:-.5px">${esc(pianoLine)}<span style="font-size:13px;font-weight:600;opacity:.85">${serialSuffix}</span></div>
         ${snYear?`<div style="font-size:11px;opacity:.75;margin-top:2px">${esc(snYear)}</div>`:''}
       </div>
       <div style="text-align:right">
@@ -1615,7 +1679,7 @@ function buildPDFTemplate() {
       <div style="flex:1.1;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;background:#fafbfc">
         ${sh(t('pdfAssessment'),'#64748b')}
         <table style="width:100%;border-collapse:collapse">
-          ${cats.map(([key,label])=>{const r=S[key];const bg=r?ratingBg[r]:'#f1f5f9';const col=r?ratingColor[r]:'#94a3b8';const risk=(key==='tuningStability'&&envTuningRisk())?`<div style="font-size:9.5px;color:#b45309;font-weight:700;margin-top:2px">${t('tuningRiskNote')}</div>`:'';return`<tr><td style="padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569">${label}${risk}</td><td style="padding:7px 0;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top"><span style="background:${bg};color:${col};font-weight:800;font-size:12px;padding:2px 10px;border-radius:20px">${r||'—'}</span>${r?`<div style="font-size:9.5px;color:${col};font-weight:700;margin-top:3px">${ratingCustomerLabel(r)}</div>`:''}</td></tr>`;}).join('')}
+          ${cats.map(([key,label])=>{const r=S[key];const col=ratingTextColor(r);const risk=(key==='tuningStability'&&envTuningRisk())?`<div style="font-size:9.5px;color:#b45309;font-weight:700;margin-top:2px">${t('tuningRiskNote')}</div>`:'';return`<tr><td style="padding:7px 0;border-bottom:1px solid #e2e8f0;font-size:12px;color:#475569">${label}${risk}</td><td style="padding:7px 0;border-bottom:1px solid #e2e8f0;text-align:right;vertical-align:top"><span style="font-weight:800;font-size:12.5px;color:${r?col:'#94a3b8'}">${r?ratingCustomerLabel(r):'—'}</span></td></tr>`;}).join('')}
         </table>
         ${envBlockHTML}
       </div>
@@ -1665,6 +1729,7 @@ function displayName(name){const n=(name||'').trim();if(!n)return'';return isJa?
 
 // ── Live report preview (iPad landscape 2-column right pane) ───────
 function buildPreviewHTML() {
+  applyAutoRatings();
   const status=getOverallStatus();
   const io=t('improveOpts'),po=t('preserveOpts');
   const impSel=io.filter((_,i)=>S.improve[i]), presSel=po.filter((_,i)=>S.preserve[i]);
@@ -1723,7 +1788,7 @@ function buildPreviewHTML() {
   // 6. Condition assessment
   if(hasRatings){
     h+=`<div class="pv-sec"><div class="pv-sec-title">${t('pdfAssessment')}</div>`;
-    h+=cats.filter(([k])=>S[k]).map(([k,label])=>`<div class="pv-row"><span class="pv-cat">${label}</span><span><span class="pv-pill" style="${rpill[S[k]]}">${S[k]}</span> <span style="font-size:10.5px;color:var(--text-3);font-weight:600">${ratingCustomerLabel(S[k])}</span></span></div>`).join('');
+    h+=cats.filter(([k])=>S[k]).map(([k,label])=>`<div class="pv-row"><span class="pv-cat">${label}</span><span style="font-weight:700;color:${ratingTextColor(S[k])}">${ratingCustomerLabel(S[k])}</span></div>`).join('');
     h+='</div>';
   }
   // 7. Measured values
